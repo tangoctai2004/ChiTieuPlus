@@ -1,0 +1,23 @@
+Cơ sở dữ liệu:
+
+Entity - CATEGORY
+id - UUID           Mã định danh danh mục. Duy nhất cho mỗi danh mục dùng để truy xuất, so sánh, đồng bộ, không bị trùng lặp.
+name - String       Tên danh mục. Ví dụ: Ăn uống, Du lịch, Thể thao, Giải trí, Hoá đơn, Học phí...
+type - String       Loại danh mục. Ví dụ: inCome, expense: thu nhập hoặc chi tiêu.
+createAt - Date     Ngày danh mục được tạo ra.
+updateAt - Date     Ngày danh mục được sửa đổi, cập nhật.
+
+Entity - TRANSACTION
+id - UUID           Mã đinh danh duy nhất cho giao dịch
+title - String      Tiêu đề giao dịch. Ví dụ: Ăn sáng bánh mì, Lương tháng 5, Thưởng tháng 5, Tiền học kì 1 năm 4,...
+amount - Double     Số tiền giao dịch
+date - Date         Ngày thực hiện giao dịch
+type - String       Loại giao dịch. Ví dụ: inCome, expense: thu nhập hoặc chi tiêu.
+note - String       Ghi chú cho giao dịch
+createAt - Date     Ngày tạo giao dịch
+updateAt - Date     Ngày giao dịch được sửa đổi, cập nhật.
+
+Mối quan hệ CATEGORY - TRANSACTION: 1 - nhiều: Một danh mục có thể liên kết với nhiều giao dịch, mỗi giao dịch chỉ một danh mục cụ thể.
+Mối quan hệ TRANSACTION - CATEGORY: 1 - 1: Một giao dịch chỉ có thể liên kết với một danh mục duy nhất.
+
+
