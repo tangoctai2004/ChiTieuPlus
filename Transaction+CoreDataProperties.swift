@@ -2,7 +2,7 @@
 //  Transaction+CoreDataProperties.swift
 //  QuanLyChiTieu
 //
-//  Created by Tạ Ngọc Tài on 27/8/25.
+//  Created by Tạ Ngọc Tài on 21/9/25.
 //
 //
 
