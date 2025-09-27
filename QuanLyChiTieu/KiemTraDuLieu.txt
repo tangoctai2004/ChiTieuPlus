@@ -1,0 +1,112 @@
+
+//
+//  ContentView.swift
+//  QuanLyChiTieu
+//
+//  Created by Tạ Ngọc Tài on 27/8/25.
+//
+
+// Lay du lieu kiem tra
+
+import SwiftUI
+import CoreData
+
+struct ContentView: View{
+    @Environment(\.managedObjectContext) private var context
+    
+//    Ham fetch va print Category da tao
+    private func fetchAndPrintCategories() {
+        let request: NSFetchRequest<Category> = Category.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Category.name, ascending: true)]
+        
+        do{
+            let results = try context.fetch(request)
+            if results.isEmpty {
+                print("Khong co du lieu Category!")
+            } else{
+                print("Danh sach danh muc da tao:")
+                results.forEach{ category in
+                    let name = category.name ?? "Khong co ten" // Name nil
+                    let type = category.type ?? "unknow"
+                    print("\(category.id?.uuidString ?? "-") | \(name) | \(type)")
+                }
+            }
+        } catch{
+            print("Loi khi fetch du lieu cua Category: \(error)")
+        }
+    }
+    
+//    Ham dinh dang ngay thang
+    private func formatted(_ date: Date) -> String{
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+        
+    }
+    
+//    Ham fetch va print Transaction da tao
+    private func fetchAndPrintTransactions() {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
+        do{
+            let results = try context.fetch(request)
+            if results.isEmpty {
+                print("Khong co du lieu Transaction!")
+            } else{
+                print("Danh sach giao dich da tao:")
+                results.forEach{ transaction in
+                    let title = transaction.title ?? "(Khong ten)"
+                    let amount = transaction.amount
+                    let date = transaction.date ?? Date()
+                    let category = transaction.category?.name ?? "(Khong dah muc)"
+                    let type = transaction.type ?? "unknow"
+                    print("\(title) | \(type) | \(category) | \(amount)đ | \(formatted(date))")
+                }
+            }
+        } catch{
+            print("Loi khi fetch Transaction: \(error)")
+        }
+    }
+    
+    func fixUnknownTransactions(context: NSManagedObjectContext) {
+        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+        request.predicate = NSPredicate(format: "type == %@", "unknow")
+        
+        do {
+            let results = try context.fetch(request)
+            if results.isEmpty {
+                print("Không còn giao dịch nào có type = unknow")
+            } else {
+                for transaction in results {
+                    // Nếu là lương -> income, còn lại -> expense
+                    if let categoryName = transaction.category?.name,
+                       categoryName.contains("Lương") {
+                        transaction.type = "income"
+                    } else {
+                        transaction.type = "expense"
+                    }
+                }
+                try context.save() // Lưu lại vào Core Data
+                print("✅ Đã sửa \(results.count) giao dịch unknow")
+            }
+        } catch {
+            print("❌ Lỗi khi sửa unknow: \(error)")
+        }
+    }
+    
+    var body: some View {
+        Color.clear
+            .onAppear {
+                fetchAndPrintCategories()
+                fetchAndPrintTransactions()
+                fixUnknownTransactions(context: context)
+            }
+    }
+}
+
+#Preview {
+    ContentView()
+        .environment(\.managedObjectContext, CoreDataStack.shared.context)
+}
+
