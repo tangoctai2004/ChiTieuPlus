@@ -9,23 +9,20 @@ import SwiftUI
 import CoreData
 
 struct TransactionAddScreen: View {
-    //    Truy cập context lưu dữ liệu
     @Environment(\.managedObjectContext) private var context
-    //    Đóng cửa sổ (quay lại màn trước)
     @Environment(\.dismiss) private var dismiss
-    //    Thông báo lưu thành công
     @State private var showSuccessToast: Bool = false
     
-    //    Trạng thái lưu dữ liệu
-    @State private var title: String = "" // Tiêu đề
-    @State private var rawAmount: String = "" // Tiền chưa định dạng
-    @State private var formattedAmount: String = "" // Tiền định dạng để hiển thị
-    @State private var date: Date = Date() // Ngày giao dịch
-    @State private var type: String = "expense" // Mặc định loại giao dịch là chi tiêu (expense)
-    @State private var selectedCategory: Category? // Danh mục
-    @State private var note: String = "" // Ghi chú
+    // Trạng thái lưu dữ liệu
+    @State private var title: String = ""
+    @State private var rawAmount: String = ""
+    @State private var formattedAmount: String = ""
+    @State private var date: Date = Date()
+    @State private var type: String = "expense"
+    @State private var selectedCategory: Category?
+    @State private var note: String = ""
     
-    //    Fetch danh mục từ Core Data
+    // Fetch danh mục từ CoreData
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Category.name, ascending: true)],
         animation: .default
@@ -34,14 +31,24 @@ struct TransactionAddScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Nền màu giống HomeScreen
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
+                // ✅ Nền gradient đồng bộ
+                LinearGradient(
+                    colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 20) {
                         
-                        // Tiêu đề
+                        // ✅ Tiêu đề app
+                        Text("Thêm giao dịch")
+                            .font(.system(size: 28, weight: .heavy, design: .rounded))
+                            .gradientText(colors: [.yellow, .orange, .green])
+                            .padding(.top, 10)
+                        
+                        // Ô nhập tiêu đề
                         TextFieldWithIcon(
                             systemName: "text.cursor",
                             placeholder: "Tiêu đề",
@@ -67,7 +74,7 @@ struct TransactionAddScreen: View {
                                 .padding(.trailing, 8)
                         }
                         
-                        // Chọn ngày giao dịch
+                        // Ngày giao dịch
                         LabeledContent {
                             DatePicker("", selection: $date, displayedComponents: .date)
                                 .labelsHidden()
@@ -76,10 +83,10 @@ struct TransactionAddScreen: View {
                                 .foregroundColor(.primary)
                         }
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemBackground)))
-                        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.systemBackground)))
+                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
                         
-                        // Chọn loại thu / chi
+                        // Loại giao dịch (Thu / Chi)
                         PickerWithStyle(
                             title: "Loại giao dịch",
                             systemImage: "arrow.left.arrow.right.circle",
@@ -87,7 +94,7 @@ struct TransactionAddScreen: View {
                             options: AppUtils.transactionTypes.map { ($0, AppUtils.displayType($0)) }
                         )
                         
-                        // Chọn danh mục
+                        // Danh mục
                         PickerWithStyleCategory(
                             title: "Danh mục",
                             systemImage: "folder",
@@ -102,7 +109,7 @@ struct TransactionAddScreen: View {
                             text: $note
                         )
                         
-                        // Nút lưu
+                        // ✅ Nút lưu gradient
                         Button(action: saveTransaction) {
                             Text("💾 Lưu giao dịch")
                                 .font(.headline)
@@ -111,41 +118,40 @@ struct TransactionAddScreen: View {
                                 .padding()
                                 .background(
                                     LinearGradient(
-                                        colors: [.red, .orange], // đồng bộ màu với HomeScreen
+                                        colors: [.blue, .purple],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
                                 )
-                                .cornerRadius(14)
-                                .shadow(color: .black.opacity(0.15), radius: 5, x: 0, y: 3)
+                                .cornerRadius(16)
+                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                         }
-                        .disabled(!canSave) // Lưu khi đủ điều kiện
+                        .disabled(!canSave)
                         .padding(.top, 10)
                     }
                     .padding()
                 }
             }
-            .navigationTitle("Thêm giao dịch")
-            .navigationBarTitleDisplayMode(.inline)
             .alert("✅ Đã thêm giao dịch", isPresented: $showSuccessToast) {
-                Button("Đồng ý", role: .cancel) {}
+                Button("Đồng ý", role: .cancel) { dismiss() }
             }
+            .navigationBarHidden(true) // Ẩn header mặc định, dùng tiêu đề custom
         }
     }
     
-    //    Điều kiện lưu thông tin
+    // Điều kiện lưu
     private var canSave: Bool {
         !title.isEmpty && AppUtils.currencyToDouble(rawAmount) > 0 && selectedCategory != nil
     }
     
-    //    Lưu giao dịch vào CoreData
+    // Lưu vào CoreData
     private func saveTransaction() {
         let newTransaction = Transaction(context: context)
         newTransaction.id = UUID()
         newTransaction.title = title
         newTransaction.amount = AppUtils.currencyToDouble(rawAmount)
         newTransaction.date = date
-        newTransaction.type = (type == "income" || type == "expense") ? type : "expense"
+        newTransaction.type = type
         newTransaction.note = note
         newTransaction.category = selectedCategory
         newTransaction.createAt = Date()
@@ -156,11 +162,10 @@ struct TransactionAddScreen: View {
             resetForm()
             showSuccessToast = true
         } catch {
-            print("Lỗi khi lưu giao dịch chi tiêu: \(error)")
+            print("❌ Lỗi khi lưu Transaction: \(error)")
         }
     }
     
-    //    Xóa dữ liệu trong form khi đã nhập xong
     private func resetForm() {
         title = ""
         rawAmount = ""

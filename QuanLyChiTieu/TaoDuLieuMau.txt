@@ -1,132 +1,89 @@
-//
-//  ContentView.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 27/8/25.
-//
-
 import SwiftUI
 import CoreData
 
-struct MockTransactionData{
-    let title: String
-    let amount: Double
-    let type: String
-    let note: String
-    let daysAgo: Int
-    let categoryName: String
-}
-
-struct ContentView: View{
+struct ContentView: View {
     @Environment(\.managedObjectContext) private var context
-    
-    func seedMockDataFromArray(context: NSManagedObjectContext){
-        let calendar = Calendar.current
-        
-        let categoryNames = Set(mockTransactions.map{
-            $0.categoryName
-        })
-        var categoryMap: [String: Category] = [:]
-        
-        for name in categoryNames{
-            let type = (name == "Lương") ? "income" : "expense"
-            let category = Category(context: context)
-            category.id = UUID()
-            category.name = name
-            category.type = type
-            category.createAt = Date()
-            category.updateAt = Date()
-            
-            categoryMap[name] = category
+
+    // Các tên danh mục mặc định theo phân loại Chi tiêu / Thu nhập
+    let defaultExpenseCategories = [
+        "Ăn uống",
+        "Chi tiêu hàng ngày",
+        "Quần áo",
+        "Mỹ phẩm",
+        "Phí tiệc tùng",
+        "Y tế",
+        "Giáo dục",
+        "Tiền điện",
+        "Đi lại",
+        "Phí liên lạc",
+        "Tiền nhà"
+    ]
+    let defaultIncomeCategories = [
+        "Tiền lương",
+        "Tiền phụ cấp",
+        "Tiền thưởng",
+        "Thu nhập phụ",
+        "Đầu tư",
+        "Thu nhập tạm thời"
+    ]
+
+    func seedDefaultCategoriesIfNeeded(context: NSManagedObjectContext) {
+        // 1. Fetch các Category hiện có
+        let fetch: NSFetchRequest<Category> = Category.fetchRequest()
+        var existing: [Category] = []
+        do {
+            existing = try context.fetch(fetch)
+        } catch {
+            print("❌ Lỗi fetch Category: \(error)")
         }
-        
-        mockTransactions.forEach{ mock in
-            let transaction = Transaction(context: context)
-            transaction.id = UUID()
-            transaction.title = mock.title
-            transaction.amount = mock.amount
-            transaction.type = mock.type
-            transaction.note = mock.note
-            transaction.date = calendar.date(byAdding: .day, value: -mock.daysAgo, to: Date())!
-            transaction.category = categoryMap[mock.categoryName]
-            transaction.createAt = Date()
-            transaction.updateAt = Date()
-            
-        }
-        
-        do{
-            try context.save()
-            print("Tao du lieu tu mang thang cong")
-        } catch{
-            print("Loi luu du lieu mo phong: \(error)")
-        }
-    }
-    
-    var body: some View{
-        NavigationView{
-            
-        }
-            .onAppear{
-            let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-            request.fetchLimit = 1
-            
-            let hasTransaction = (try? context.count(for: request)) ?? 0 > 0
-            if !hasTransaction{
-                seedMockDataFromArray(context: context)
-                print("Da tao du lieu mo phong")
-            } else{
-                print("Du lieu da ton tai, khong tao lai nua")
+
+        // 2. Map name -> Category để kiểm tra đã tồn tại
+        var map: [String: Category] = [:]
+        for cat in existing {
+            if let name = cat.name {
+                map[name] = cat
             }
-            
-            
+        }
+
+        // 3. Tạo các category expense nếu chưa có
+        for name in defaultExpenseCategories {
+            if map[name] == nil {
+                let cat = Category(context: context)
+                cat.id = UUID()
+                cat.name = name
+                cat.type = "expense"
+                cat.createAt = Date()
+                cat.updateAt = Date()
+                map[name] = cat
+            }
+        }
+
+        // 4. Tạo các category income nếu chưa có
+        for name in defaultIncomeCategories {
+            if map[name] == nil {
+                let cat = Category(context: context)
+                cat.id = UUID()
+                cat.name = name
+                cat.type = "income"
+                cat.createAt = Date()
+                cat.updateAt = Date()
+                map[name] = cat
+            }
+        }
+
+        // 5. Save nếu có thêm mới
+        do {
+            try context.save()
+            print("✅ Đã seed các category mặc định")
+        } catch {
+            print("❌ Lỗi lưu các category mặc định: \(error)")
         }
     }
+
+    var body: some View {
+        Text("Hello")
+            .onAppear {
+                seedDefaultCategoriesIfNeeded(context: context)
+            }
+    }
 }
-
-let mockTransactions: [MockTransactionData] = [
-    // --- Ăn uống (lặp nhiều ngày) ---
-    MockTransactionData(title: "Mua cà phê", amount: 35000, type: "expense", note: "", daysAgo: 1, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Ăn sáng bánh mì", amount: 20000, type: "expense", note: "", daysAgo: 1, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Mua snack", amount: 15000, type: "expense", note: "", daysAgo: 2, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Ăn trưa cơm gà", amount: 50000, type: "expense", note: "", daysAgo: 2, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Ăn tối bún bò", amount: 45000, type: "expense", note: "", daysAgo: 5, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Ăn phở sáng", amount: 40000, type: "expense", note: "", daysAgo: 7, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Mua trà sữa", amount: 55000, type: "expense", note: "", daysAgo: 9, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Mua bánh ngọt", amount: 30000, type: "expense", note: "", daysAgo: 14, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Ăn cơm trưa văn phòng", amount: 60000, type: "expense", note: "", daysAgo: 18, categoryName: "Ăn uống"),
-    MockTransactionData(title: "Mua trái cây", amount: 70000, type: "expense", note: "", daysAgo: 25, categoryName: "Ăn uống"),
-
-    // --- Lương ---
-    MockTransactionData(title: "Lương tháng 4", amount: 15000000, type: "income", note: "", daysAgo: 3, categoryName: "Lương"),
-    MockTransactionData(title: "Thưởng dự án", amount: 2000000, type: "income", note: "", daysAgo: 20, categoryName: "Lương"),
-
-    // --- Mua sắm ---
-    MockTransactionData(title: "Mua quần jeans", amount: 420000, type: "expense", note: "", daysAgo: 10, categoryName: "Mua sắm"),
-    MockTransactionData(title: "Mua điện thoại", amount: 10000000, type: "expense", note: "", daysAgo: 11, categoryName: "Mua sắm"),
-    MockTransactionData(title: "Mua áo sơ mi", amount: 250000, type: "expense", note: "", daysAgo: 15, categoryName: "Mua sắm"),
-    MockTransactionData(title: "Mua giày thể thao", amount: 1500000, type: "expense", note: "", daysAgo: 21, categoryName: "Mua sắm"),
-    MockTransactionData(title: "Mua balo", amount: 800000, type: "expense", note: "", daysAgo: 28, categoryName: "Mua sắm"),
-
-    // --- Di chuyển ---
-    MockTransactionData(title: "Đi taxi về nhà", amount: 80000, type: "expense", note: "", daysAgo: 3, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Tiền gửi xe", amount: 100000, type: "expense", note: "", daysAgo: 3, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Đổ xăng", amount: 90000, type: "expense", note: "", daysAgo: 11, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Đi grab đi làm", amount: 70000, type: "expense", note: "", daysAgo: 13, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Đi xe bus", amount: 15000, type: "expense", note: "", daysAgo: 17, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Đổ xăng", amount: 95000, type: "expense", note: "", daysAgo: 19, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Đi taxi đi chơi", amount: 120000, type: "expense", note: "", daysAgo: 23, categoryName: "Di chuyển"),
-    MockTransactionData(title: "Đi grab", amount: 65000, type: "expense", note: "", daysAgo: 27, categoryName: "Di chuyển"),
-
-    // --- Khác ---
-    MockTransactionData(title: "Đóng tiền điện", amount: 800000, type: "expense", note: "", daysAgo: 6, categoryName: "Hóa đơn"),
-    MockTransactionData(title: "Đóng tiền nước", amount: 300000, type: "expense", note: "", daysAgo: 16, categoryName: "Hóa đơn"),
-    MockTransactionData(title: "Mua thẻ điện thoại", amount: 100000, type: "expense", note: "", daysAgo: 22, categoryName: "Hóa đơn"),
-    MockTransactionData(title: "Đóng tiền internet", amount: 250000, type: "expense", note: "", daysAgo: 26, categoryName: "Hóa đơn"),
-    MockTransactionData(title: "Mua quà sinh nhật bạn", amount: 500000, type: "expense", note: "", daysAgo: 30, categoryName: "Khác"),
-]
-
-#Preview {
-    ContentView()
-        .environment(\.managedObjectContext, CoreDataStack.shared.context)
-}
-

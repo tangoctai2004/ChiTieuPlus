@@ -23,11 +23,22 @@ struct CategoryManageScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
+                // ✅ Nền gradient đồng bộ HomeScreen
+                LinearGradient(
+                    colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 20) {
+                        
+                        // ✅ App title
+                        Text("Quản lý danh mục")
+                            .font(.system(size: 28, weight: .heavy, design: .rounded))
+                            .gradientText(colors: [.yellow, .orange, .green])
+                            .padding(.top, 10)
                         
                         // Chọn loại danh mục (Thu / Chi)
                         PickerWithStyle(
@@ -44,7 +55,7 @@ struct CategoryManageScreen: View {
                             text: $name
                         )
                         
-                        // Nút thêm hoặc cập nhật danh mục
+                        // ✅ Nút thêm hoặc cập nhật danh mục (màu gradient + bo góc)
                         Button(action: {
                             if let category = editingCategory {
                                 updateCategory(category)
@@ -64,28 +75,32 @@ struct CategoryManageScreen: View {
                                         endPoint: .trailing
                                     )
                                 )
-                                .cornerRadius(14)
-                                .shadow(color: .black.opacity(0.15), radius: 5, x: 0, y: 3)
+                                .cornerRadius(16)
+                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                         }
-                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty) // Chỉ bật khi có tên danh mục
+                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                         
-                        // Danh sách danh mục
                         VStack(alignment: .leading, spacing: 12) {
                             Label("Danh sách danh mục", systemImage: "list.bullet")
                                 .font(.headline)
                                 .padding(.bottom, 4)
+                                .foregroundColor(.blue)
                             
                             ForEach(filteredCategories, id: \.self) { category in
                                 HStack {
                                     Text(category.name ?? "")
-                                        .font(.body)
+                                        .font(.system(.body, design: .rounded))
+                                        .foregroundColor(.primary)
                                     
                                     Spacer()
                                     
-                                    Button("Sửa") {
+                                    Button {
                                         name = category.name ?? ""
                                         editingCategory = category
                                         selectedType = category.type ?? "expense"
+                                    } label: {
+                                        Text("Sửa")
+                                            .font(.subheadline)
                                     }
                                     .buttonStyle(.bordered)
                                     
@@ -96,8 +111,11 @@ struct CategoryManageScreen: View {
                                     }
                                 }
                                 .padding()
-                                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemBackground)))
-                                .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .fill(Color(.systemGray6))
+                                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                )
                             }
                         }
                         .padding(.top, 10)
@@ -106,17 +124,16 @@ struct CategoryManageScreen: View {
                     .padding()
                 }
             }
-            .navigationTitle("Danh mục")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
     
-    // Lọc danh mục theo loại đang chọn
+    // MARK: - Lọc danh mục theo loại
     private var filteredCategories: [Category] {
         allCategories.filter { $0.type == selectedType }
     }
     
-    // Thêm danh mục
+    // MARK: - Thêm danh mục
     private func addCategory() {
         let newCategory = Category(context: context)
         newCategory.id = UUID()
@@ -129,7 +146,7 @@ struct CategoryManageScreen: View {
         resetForm()
     }
     
-    // Cập nhật danh mục
+    // MARK: - Cập nhật danh mục
     private func updateCategory(_ category: Category) {
         category.name = name.trimmingCharacters(in: .whitespaces)
         category.type = selectedType
@@ -139,15 +156,14 @@ struct CategoryManageScreen: View {
         resetForm()
     }
     
-    // Xoá danh mục
+    // MARK: - Xoá danh mục
     private func deleteCategory(_ category: Category) {
         context.delete(category)
-        
         saveContext()
         resetForm()
     }
     
-    // Lưu vào CoreData
+    // MARK: - Lưu context
     private func saveContext() {
         do {
             try context.save()
@@ -156,7 +172,7 @@ struct CategoryManageScreen: View {
         }
     }
     
-    // Reset form sau khi xử lý
+    // Reset form
     private func resetForm() {
         name = ""
         editingCategory = nil
