@@ -23,7 +23,6 @@ struct CategoryManageScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // ✅ Nền gradient đồng bộ HomeScreen
                 LinearGradient(
                     colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
                     startPoint: .topLeading,
@@ -34,13 +33,11 @@ struct CategoryManageScreen: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         
-                        // ✅ App title
                         Text("Quản lý danh mục")
                             .font(.system(size: 28, weight: .heavy, design: .rounded))
                             .gradientText(colors: [.yellow, .orange, .green])
                             .padding(.top, 10)
                         
-                        // Chọn loại danh mục (Thu / Chi)
                         PickerWithStyle(
                             title: "Loại danh mục",
                             systemImage: "arrow.left.arrow.right.circle",
@@ -48,14 +45,12 @@ struct CategoryManageScreen: View {
                             options: AppUtils.transactionTypes.map { ($0, AppUtils.displayType($0)) }
                         )
                         
-                        // Ô nhập tên danh mục
                         TextFieldWithIcon(
                             systemName: "folder.badge.plus",
                             placeholder: "Tên danh mục",
                             text: $name
                         )
                         
-                        // ✅ Nút thêm hoặc cập nhật danh mục (màu gradient + bo góc)
                         Button(action: {
                             if let category = editingCategory {
                                 updateCategory(category)
@@ -79,7 +74,6 @@ struct CategoryManageScreen: View {
                                 .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                         }
                         .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                        
                         VStack(alignment: .leading, spacing: 12) {
                             Label("Danh sách danh mục", systemImage: "list.bullet")
                                 .font(.headline)

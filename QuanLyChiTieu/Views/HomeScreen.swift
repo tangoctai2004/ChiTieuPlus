@@ -137,7 +137,14 @@ struct HomeScreen: View {
                                             .padding(.leading, 8)
                                         
                                         ForEach(group.items, id: \.id) { transaction in
-                                            TransactionRow(transaction: transaction)
+                                            NavigationLink {
+                                                TransactionDetailScreen(transaction: transaction) {
+                                                    fetchTransactions()
+                                                }
+                                            } label: {
+                                                TransactionRow(transaction: transaction)
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
                                         }
                                     }
                                 }
@@ -195,7 +202,7 @@ struct HomeScreen: View {
     
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd/MM/yyyy"  // ✅ định dạng mới
+        formatter.dateFormat = "dd/MM/yyyy"
         return formatter.string(from: date)
     }
 }

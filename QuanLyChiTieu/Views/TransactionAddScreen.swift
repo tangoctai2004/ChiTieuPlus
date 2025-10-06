@@ -94,7 +94,6 @@ struct TransactionAddScreen: View {
                             options: AppUtils.transactionTypes.map { ($0, AppUtils.displayType($0)) }
                         )
                         
-                        // Danh mục
                         PickerWithStyleCategory(
                             title: "Danh mục",
                             systemImage: "folder",
@@ -102,14 +101,12 @@ struct TransactionAddScreen: View {
                             categories: categories.filter { $0.type == type }
                         )
                         
-                        // Ghi chú
                         TextFieldWithIcon(
                             systemName: "note.text",
                             placeholder: "Ghi chú",
                             text: $note
                         )
                         
-                        // ✅ Nút lưu gradient
                         Button(action: saveTransaction) {
                             Text("💾 Lưu giao dịch")
                                 .font(.headline)

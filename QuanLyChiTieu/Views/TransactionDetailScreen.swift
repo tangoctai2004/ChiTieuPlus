@@ -1,10 +1,3 @@
-//
-//  TransactionDetailScreen.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 26/9/25.
-//
-
 import SwiftUI
 import CoreData
 
@@ -12,39 +5,48 @@ struct TransactionDetailScreen: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var transaction: Transaction
-    
+    let onUpdate: () -> Void
+
     @State private var title: String = ""
     @State private var rawAmount: String = ""
     @State private var formattedAmount: String = ""
     @State private var date: Date = Date()
+    @State private var type: String = "expense"
     @State private var selectedCategory: Category?
-    @State private var selectedType: String = "expense"
     @State private var note: String = ""
-    
-    let onUpdate: () -> Void
-    
+
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Category.name, ascending: true)],
         animation: .default
     ) private var categories: FetchedResults<Category>
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
-                // Nền đồng bộ HomeScreen
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
-                
+                // Nền gradient giống TransactionAddScreen
+                LinearGradient(
+                    colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
                 ScrollView {
                     VStack(spacing: 20) {
                         
-                        // Tiêu đề
+                        // Tiêu đề màn hình
+                        Text("Chi tiết giao dịch")
+                            .font(.system(size: 28, weight: .heavy, design: .rounded))
+                            .gradientText(colors: [.yellow, .orange, .green])
+                            .padding(.top, 10)
+                        
+                        // Ô nhập tiêu đề
                         TextFieldWithIcon(
                             systemName: "text.cursor",
                             placeholder: "Tiêu đề",
                             text: $title
                         )
-                        
+
                         // Số tiền
                         HStack {
                             TextFieldWithIcon(
@@ -58,12 +60,12 @@ struct TransactionDetailScreen: View {
                                 rawAmount = digits
                                 formattedAmount = AppUtils.formatCurrencyInput(digits)
                             }
-                            
+
                             Text("VNĐ")
                                 .foregroundColor(.secondary)
                                 .padding(.trailing, 8)
                         }
-                        
+
                         // Ngày giao dịch
                         LabeledContent {
                             DatePicker("", selection: $date, displayedComponents: .date)
@@ -73,32 +75,32 @@ struct TransactionDetailScreen: View {
                                 .foregroundColor(.primary)
                         }
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.systemBackground)))
-                        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
-                        
-                        // Loại giao dịch
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.systemBackground)))
+                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+
+                        // Loại giao dịch (Thu / Chi)
                         PickerWithStyle(
                             title: "Loại giao dịch",
                             systemImage: "arrow.left.arrow.right.circle",
-                            selection: $selectedType,
+                            selection: $type,
                             options: AppUtils.transactionTypes.map { ($0, AppUtils.displayType($0)) }
                         )
-                        
+
                         // Danh mục
                         PickerWithStyleCategory(
                             title: "Danh mục",
                             systemImage: "folder",
                             selection: $selectedCategory,
-                            categories: categories.filter { $0.type == selectedType }
+                            categories: categories.filter { $0.type == type }
                         )
-                        
+
                         // Ghi chú
                         TextFieldWithIcon(
                             systemName: "note.text",
                             placeholder: "Ghi chú",
                             text: $note
                         )
-                        
+
                         // Nút lưu chỉnh sửa
                         Button(action: updateTransaction) {
                             Text("💾 Lưu chỉnh sửa")
@@ -108,17 +110,18 @@ struct TransactionDetailScreen: View {
                                 .padding()
                                 .background(
                                     LinearGradient(
-                                        colors: [.red, .orange],
+                                        colors: [.blue, .purple],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
                                 )
-                                .cornerRadius(14)
-                                .shadow(color: .black.opacity(0.15), radius: 5, x: 0, y: 3)
+                                .cornerRadius(16)
+                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                         }
-                        .disabled(!canUpdate)
-                        
-                        // Nút xoá giao dịch
+                        .disabled(!canSave)
+                        .padding(.top, 10)
+
+                        // Nút xóa
                         Button(role: .destructive, action: deleteTransaction) {
                             Text("🗑️ Xoá giao dịch")
                                 .font(.headline)
@@ -126,55 +129,51 @@ struct TransactionDetailScreen: View {
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .background(Color.red)
-                                .cornerRadius(14)
-                                .shadow(color: .black.opacity(0.15), radius: 5, x: 0, y: 3)
+                                .cornerRadius(16)
+                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                         }
                         .padding(.top, 5)
                     }
                     .padding()
                 }
             }
-            .navigationTitle("Chi tiết giao dịch")
-            .onAppear(perform: loadData) // Load dữ liệu khi vào
+            .navigationBarHidden(true)
+            .onAppear(perform: loadData)
         }
     }
-    
-    //    Load dữ liệu khi mở màn chi tiết
+
+    // MARK: - Helpers
     private func loadData() {
         title = transaction.title ?? ""
         rawAmount = String(Int(transaction.amount))
         formattedAmount = AppUtils.formatCurrencyInput(rawAmount)
         date = transaction.date ?? Date()
-        selectedType = transaction.type ?? "expense"
+        type = transaction.type ?? "expense"
         selectedCategory = transaction.category
         note = transaction.note ?? ""
     }
-    
-    //    Kiểm tra đủ điều kiện lưu
-    private var canUpdate: Bool {
+
+    private var canSave: Bool {
         !title.isEmpty && AppUtils.currencyToDouble(rawAmount) > 0 && selectedCategory != nil
     }
-    
-    //    Cập nhật giao dịch
+
     private func updateTransaction() {
         transaction.title = title
         transaction.amount = AppUtils.currencyToDouble(rawAmount)
         transaction.date = date
-        transaction.type = selectedType
+        transaction.type = type
         transaction.note = note
         transaction.category = selectedCategory
         transaction.updateAt = Date()
-        
         do {
             try context.save()
             onUpdate()
             dismiss()
         } catch {
-            print("Lỗi khi sửa giao dịch \(error)")
+            print("❌ Lỗi khi sửa Transaction: \(error)")
         }
     }
-    
-    //    Xoá giao dịch
+
     private func deleteTransaction() {
         context.delete(transaction)
         do {
@@ -182,7 +181,7 @@ struct TransactionDetailScreen: View {
             onUpdate()
             dismiss()
         } catch {
-            print("Lỗi khi xoá giao dịch \(error)")
+            print("❌ Lỗi khi xoá Transaction: \(error)")
         }
     }
 }
