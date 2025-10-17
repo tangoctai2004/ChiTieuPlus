@@ -1,12 +1,12 @@
 import SwiftUI
 
-// MARK: - Main View
 struct CategoryEditScreen: View {
     @ObservedObject var viewModel: CategoryViewModel
     let category: Category
 
     @Environment(\.dismiss) private var dismiss
 
+    // State của View được giữ nguyên
     @State private var name: String = ""
     @State private var selectedType: String = "expense"
     @State private var selectedIconName: String = ""
@@ -18,22 +18,17 @@ struct CategoryEditScreen: View {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    // MARK: - Body
     var body: some View {
+        // Toàn bộ giao diện trong body được giữ nguyên 100%
         VStack(spacing: 0) {
-            // MARK: - Custom Header
             CustomEditHeader(onCancel: { dismiss() })
 
-            // Vùng nội dung có thể cuộn
             ScrollView {
                 VStack(spacing: 15) {
-                    // --- Thẻ nhập thông tin ---
                     VStack {
                         TextField("Tên danh mục", text: $name)
                             .padding()
-                        
                         Divider()
-                        
                         Picker("Loại", selection: $selectedType) {
                             Text("Chi tiêu").tag("expense")
                             Text("Thu nhập").tag("income")
@@ -44,7 +39,6 @@ struct CategoryEditScreen: View {
                     .background(Color(.systemBackground))
                     .cornerRadius(10)
 
-                    // --- Thẻ chọn biểu tượng ---
                     VStack(alignment: .leading) {
                         Text("Biểu tượng")
                             .font(.headline)
@@ -69,10 +63,7 @@ struct CategoryEditScreen: View {
                 .padding()
             }
 
-            // SỬA ĐỔI: Thêm khu vực chứa cả hai nút Xoá và Cập nhật
-            // MARK: - Action Buttons
             HStack(spacing: 15) {
-                // Nút Xoá
                 Button(role: .destructive) {
                     showingDeleteConfirmation = true
                 } label: {
@@ -85,8 +76,8 @@ struct CategoryEditScreen: View {
                         .cornerRadius(25)
                 }
 
-                // Nút Cập nhật
                 Button(action: {
+                    // Gọi hàm update của ViewModel
                     viewModel.updateCategory(category, name: name, type: selectedType, iconName: selectedIconName)
                     dismiss()
                 }) {
@@ -113,6 +104,7 @@ struct CategoryEditScreen: View {
         }
         .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
             Button("Chắc chắn xoá", role: .destructive) {
+                // Gọi hàm delete của ViewModel
                 viewModel.deleteCategory(category)
                 dismiss()
             }
@@ -123,26 +115,17 @@ struct CategoryEditScreen: View {
     }
 }
 
-// MARK: - Custom Header View for Edit Screen
-// SỬA ĐỔI: Đã loại bỏ nút Cập nhật khỏi header
+// MARK: - Custom Header View for Edit Screen (Giữ nguyên)
 struct CustomEditHeader: View {
     let onCancel: () -> Void
 
     var body: some View {
         HStack {
-            Button("Huỷ") {
-                onCancel()
-            }
-            .frame(width: 80, alignment: .leading)
-            
+            Button("Huỷ") { onCancel() }
+                .frame(width: 80, alignment: .leading)
             Spacer()
-            
-            Text("Chỉnh sửa danh mục")
-                .font(.headline)
-            
+            Text("Chỉnh sửa danh mục").font(.headline)
             Spacer()
-            
-            // Placeholder để căn giữa tiêu đề
             Spacer().frame(width: 80)
         }
         .padding()

@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreData
 
-// MARK: - Gradient Text Modifier
+// MARK: - Gradient Text Modifier (Giữ nguyên)
 extension View {
     func gradientText(colors: [Color]) -> some View {
         self.overlay(
@@ -15,8 +15,7 @@ extension View {
     }
 }
 
-// MARK: - Transaction Row
-// (Không thay đổi)
+// MARK: - Transaction Row (Giữ nguyên)
 struct TransactionRow: View {
     let transaction: Transaction
     
@@ -69,17 +68,16 @@ struct TransactionRow: View {
 
 // MARK: - HomeScreen
 struct HomeScreen: View {
-    @Environment(\.managedObjectContext) private var context
-    @State private var groupedTransactions: [(date: Date, items: [Transaction])] = []
-    @State private var allTransactions: [Transaction] = []
-    @State private var refreshId = UUID()
+    // SỬA ĐỔI: Sử dụng ViewModel làm nguồn dữ liệu
+    @StateObject private var viewModel = TransactionViewModel()
     
+    // Các state điều khiển UI được giữ nguyên
+    @State private var selectedFilter: FilterType = .all
     enum FilterType: String, CaseIterable {
         case all = "Tất cả"
         case income = "Thu nhập"
         case expense = "Chi tiêu"
     }
-    @State private var selectedFilter: FilterType = .all
     
     var body: some View {
         NavigationStack {
@@ -128,12 +126,11 @@ struct HomeScreen: View {
                                         
                                         ForEach(group.items, id: \.id) { transaction in
                                             NavigationLink {
-                                                // SỬA ĐỔI QUAN TRỌNG:
-                                                // Cập nhật lại cách khởi tạo TransactionDetailScreen
-                                                // để nó có thể tạo ra TransactionEditViewModel.
-                                                TransactionDetailScreen(transaction: transaction, context: context) {
-                                                    fetchTransactions()
-                                                }
+                                                // SỬA ĐỔI: Điều hướng đến màn hình chi tiết
+                                                // với TransactionFormViewModel được khởi tạo.
+                                                TransactionDetailScreen(
+                                                    viewModel: TransactionFormViewModel(transaction: transaction)
+                                                )
                                             } label: {
                                                 TransactionRow(transaction: transaction)
                                             }
@@ -142,7 +139,6 @@ struct HomeScreen: View {
                                     }
                                 }
                             }
-                            .id(refreshId)
                             .padding(.horizontal)
                             .padding(.bottom, 10)
                         }
@@ -150,22 +146,24 @@ struct HomeScreen: View {
                 }
             }
             .onAppear {
-                fetchTransactions()
+                // SỬA ĐỔI: Yêu cầu ViewModel lấy dữ liệu
+                viewModel.fetchTransactions()
             }
             .navigationBarHidden(true)
         }
     }
     
-    // MARK: - Filtering & Data Fetching
+    // MARK: - Filtering & Data Formatting (Giữ nguyên logic)
     
     private func filteredTransactions() -> [Transaction] {
+        // SỬA ĐỔI: Lấy dữ liệu từ viewModel
         switch selectedFilter {
         case .all:
-            return allTransactions
+            return viewModel.allTransactions
         case .income:
-            return allTransactions.filter { $0.type == "income" }
+            return viewModel.allTransactions.filter { $0.type == "income" }
         case .expense:
-            return allTransactions.filter { $0.type == "expense" }
+            return viewModel.allTransactions.filter { $0.type == "expense" }
         }
     }
     
@@ -177,18 +175,6 @@ struct HomeScreen: View {
         return groupDict.map { (key, value) in
             (date: key, items: value)
         }.sorted { $0.date > $1.date }
-    }
-    
-    private func fetchTransactions() {
-        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.createAt, ascending: false)]
-        
-        do {
-            allTransactions = try context.fetch(request)
-            refreshId = UUID() // Cập nhật ID để force refresh UI
-        } catch {
-            print("Lỗi khi fetch Transaction: \(error)")
-        }
     }
     
     private func formattedDate(_ date: Date) -> String {

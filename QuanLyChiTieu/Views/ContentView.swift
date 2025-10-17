@@ -6,8 +6,9 @@ struct ContentView: View {
     @Environment(\.managedObjectContext) private var context
     @State private var selectedTab: Tab = .home
     
-    // Đối tượng này sẽ lưu dữ liệu nháp, đã có sẵn trong code của bạn
-    @StateObject private var transactionDraft = TransactionDraft()
+    // SỬA ĐỔI: Sử dụng TransactionFormViewModel thay cho TransactionDraft
+    // Điều này giúp giữ trạng thái form khi chuyển tab
+    @StateObject private var transactionFormViewModel = TransactionFormViewModel()
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -17,21 +18,23 @@ struct ContentView: View {
                     HomeScreen()
                         .padding(.bottom, 80)
                 case .category:
-                    CategoryListScreen(context: context)
+                    // SỬA ĐỔI: Không cần truyền context vào nữa
+                    CategoryListScreen()
                         .padding(.bottom, 80)
                 case .dashboard:
-                    // Trang này sẽ tự động nhận transactionDraft từ environment
+                    // SỬA ĐỔI: Trang này giờ sẽ nhận viewModel từ environment
                     TransactionAddScreen()
                         .padding(.bottom, 80)
                 case .setting:
-                    // Thay thế bằng màn hình cài đặt của bạn, ví dụ: DashboardScreen()
+                    // DashboardScreen() là màn hình thống kê, bạn có thể thay thế sau
                     Text("Settings Screen")
                         .padding(.bottom, 80)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(.white))
-            .environmentObject(transactionDraft)
+            // SỬA ĐỔI: Truyền TransactionFormViewModel vào môi trường
+            .environmentObject(transactionFormViewModel)
             
             CustomTabBar(selectedTab: $selectedTab)
                 .padding(.horizontal, 20)
@@ -41,8 +44,8 @@ struct ContentView: View {
     }
 }
 
-
-// Toàn bộ phần CustomTabBar và TabBarButton của bạn được giữ nguyên, không có bất kỳ thay đổi nào về giao diện.
+// Toàn bộ phần enum Tab, CustomTabBar, và TabBarButton được giữ nguyên 100%
+// theo code gốc của bạn để đảm bảo giao diện không đổi.
 
 enum Tab {
     case home, category, dashboard, setting

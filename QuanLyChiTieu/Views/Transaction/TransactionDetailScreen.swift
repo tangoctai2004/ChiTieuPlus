@@ -4,118 +4,30 @@ import CoreData
 struct TransactionDetailScreen: View {
     @Environment(\.dismiss) private var dismiss
     
-    @StateObject private var viewModel: TransactionEditViewModel
+    @StateObject var viewModel: TransactionFormViewModel
+    @StateObject private var categoryVM = CategoryViewModel()
     
-    // State để quản lý alert xác nhận xoá
     @State private var showingDeleteConfirmation = false
     
-    let onUpdate: () -> Void
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Category.name, ascending: true)],
-        animation: .default
-    ) private var categories: FetchedResults<Category>
-
-    init(transaction: Transaction, context: NSManagedObjectContext, onUpdate: @escaping () -> Void) {
-        _viewModel = StateObject(wrappedValue: TransactionEditViewModel(transaction: transaction, context: context))
-        self.onUpdate = onUpdate
+    // Giữ nguyên init để nhận ViewModel từ HomeScreen
+    init(viewModel: TransactionFormViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            // MARK: - Custom Header
-            CustomDetailHeader(
-                selectedType: $viewModel.type,
-                onBack: { dismiss() }
-            )
+            CustomDetailHeader(selectedType: $viewModel.type, onBack: { dismiss() })
 
-            // MARK: - Form Inputs
             ScrollView {
                 VStack(spacing: 12) {
-                    // --- Thẻ nhập thông tin (cố định) ---
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text("Tiêu đề")
-                                .font(.subheadline)
-                            TextField("Nhập tiêu đề", text: $viewModel.transactionTitle)
-                                .multilineTextAlignment(.trailing)
-                                .font(.subheadline)
-                        }
-                        .padding()
-                        Divider().padding(.leading)
-                        
-                        HStack {
-                            Text("Ngày")
-                                .font(.subheadline)
-                            Spacer()
-                            DatePicker("", selection: $viewModel.date, displayedComponents: .date)
-                                .labelsHidden()
-                                .environment(\.locale, Locale(identifier: "vi_VN"))
-                        }
-                        .padding()
-                        Divider().padding(.leading)
-                        
-                        HStack {
-                            Text("Ghi chú")
-                                .font(.subheadline)
-                            TextField("Chưa nhập vào", text: $viewModel.note)
-                                .multilineTextAlignment(.trailing)
-                                .font(.subheadline)
-                        }
-                        .padding()
-                        Divider().padding(.leading)
-                        
-                        HStack {
-                            Text(viewModel.type == "expense" ? "Tiền chi" : "Tiền thu")
-                                .font(.subheadline)
-                            Spacer()
-                            TextField("0", text: $viewModel.formattedAmount)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                                .font(.subheadline)
-                                .onChange(of: viewModel.formattedAmount) { newValue in
-                                    let digits = newValue.filter { "0123456789".contains($0) }
-                                    viewModel.rawAmount = digits
-                                    viewModel.formattedAmount = AppUtils.formatCurrencyInput(digits)
-                                }
-                            Text("đ")
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                    }
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    
-                    // MARK: - Category Grid (Scrollable)
-                    VStack(alignment: .leading) {
-                        Text("Danh mục")
-                            .font(.subheadline)
-                            .padding([.top, .horizontal])
-
-                        ScrollView {
-                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
-                                ForEach(categories.filter { $0.type == viewModel.type }) { category in
-                                    CategoryGridButton(
-                                        category: category,
-                                        isSelected: viewModel.selectedCategory == category
-                                    ) {
-                                        viewModel.selectedCategory = category
-                                    }
-                                }
-                            }
-                            .padding([.horizontal, .bottom])
-                        }
-                    }
-                    .background(Color.white)
-                    .cornerRadius(10)
+                    TransactionFormFields(viewModel: viewModel)
+                    // Sử dụng Grid đã được sửa lỗi
+                    CategorySelectionGrid(viewModel: viewModel, categoryVM: categoryVM)
                 }
                 .padding()
             }
             
-            // SỬA ĐỔI: Hai nút đặt cạnh nhau trong HStack
-            // MARK: - Action Buttons
             HStack(spacing: 15) {
-                // Nút Xoá
                 Button(role: .destructive) {
                     showingDeleteConfirmation = true
                 } label: {
@@ -125,20 +37,19 @@ struct TransactionDetailScreen: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(Color.red)
-                        .cornerRadius(25) // Tăng độ bo tròn
+                        .cornerRadius(25)
                 }
                 
-                // Nút Lưu Chỉnh Sửa
                 Button(action: updateTransaction) {
                     Text("Lưu chỉnh sửa")
                         .font(.body.weight(.semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.gray) // Đổi màu thành xám
-                        .cornerRadius(25) // Tăng độ bo tròn
+                        .background(Color.gray)
+                        .cornerRadius(25)
                 }
-                .disabled(!viewModel.canSave)
+                .disabled(!viewModel.canSave) // Dùng canSave để vô hiệu hóa nút
                 .opacity(viewModel.canSave ? 1.0 : 0.6)
             }
             .padding()
@@ -147,8 +58,9 @@ struct TransactionDetailScreen: View {
         .background(Color(.systemGroupedBackground))
         .navigationBarHidden(true)
         .ignoresSafeArea(.keyboard, edges: .bottom)
-        .onTapGesture {
-            hideKeyboard()
+        .onTapGesture { hideKeyboard() }
+        .onAppear {
+            categoryVM.fetchAllCategories()
         }
         .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
             Button("Chắc chắn xoá", role: .destructive) { delete() }
@@ -158,16 +70,13 @@ struct TransactionDetailScreen: View {
         }
     }
 
-    // MARK: - Helper Functions
     private func updateTransaction() {
-        viewModel.saveChanges()
-        onUpdate()
+        viewModel.save()
         dismiss()
     }
 
     private func delete() {
-        viewModel.deleteTransaction()
-        onUpdate()
+        viewModel.delete()
         dismiss()
     }
     
@@ -176,7 +85,7 @@ struct TransactionDetailScreen: View {
     }
 }
 
-// MARK: - Custom Header for Detail Screen
+// Custom Header giữ nguyên 100%
 struct CustomDetailHeader: View {
     @Binding var selectedType: String
     let onBack: () -> Void
@@ -196,11 +105,10 @@ struct CustomDetailHeader: View {
                 Text("Tiền thu").tag("income")
             }
             .pickerStyle(.segmented)
-            .frame(width: 180) // Thu nhỏ picker
+            .frame(width: 180)
             
             Spacer()
             
-            // Placeholder để căn giữa picker
             Spacer().frame(width: 44)
         }
         .padding(.horizontal)

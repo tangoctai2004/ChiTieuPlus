@@ -1,33 +1,26 @@
 import SwiftUI
 
-// MARK: - Main View
 struct CategoryAddScreen: View {
     @ObservedObject var viewModel: CategoryViewModel
     @Environment(\.dismiss) private var dismiss
     
-    // State để lưu dữ liệu form
+    // State của View được giữ nguyên
     @State private var name: String = ""
     @State private var selectedType: String = "expense"
     @State private var selectedIconName: String = IconProvider.allIcons.first?.iconName ?? "cart.fill"
     
-    // Lấy danh sách icon từ IconProvider
     let iconList = IconProvider.allIcons
     
-    // Điều kiện để bật nút Lưu
     private var canSave: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
-    // MARK: - Body
     var body: some View {
+        // Toàn bộ giao diện trong body được giữ nguyên 100%
         VStack(spacing: 0) {
-            // MARK: - Custom Header
-            // SỬA ĐỔI: Header giờ chỉ còn nút Huỷ và tiêu đề
             CustomAddHeader(onCancel: { dismiss() })
             
-            // Nội dung chính
             VStack(spacing: 15) {
-                // --- Thẻ nhập thông tin ---
                 VStack {
                     TextField("Tên danh mục", text: $name)
                         .padding()
@@ -44,7 +37,6 @@ struct CategoryAddScreen: View {
                 .background(Color(.systemBackground))
                 .cornerRadius(10)
                 
-                // --- Thẻ chọn biểu tượng ---
                 VStack(alignment: .leading) {
                     Text("Biểu tượng")
                         .font(.headline)
@@ -71,15 +63,14 @@ struct CategoryAddScreen: View {
             .padding()
             .frame(maxHeight: .infinity, alignment: .top)
             
-            // SỬA ĐỔI: Thêm nút Lưu ở dưới cùng với style mới
-            // MARK: - Save Button
+            // Nút Save gọi đúng hàm của ViewModel
             Button(action: {
                 viewModel.addCategory(name: name, type: selectedType, iconName: selectedIconName)
                 dismiss()
             }) {
                 Text("Lưu danh mục")
             }
-            .buttonStyle(AnimatedButtonStyle(isEnabled: canSave)) // Áp dụng style hiệu ứng
+            .buttonStyle(AnimatedButtonStyle(isEnabled: canSave)) // AnimatedButtonStyle cần được định nghĩa ở đâu đó
             .disabled(!canSave)
             .padding()
             .background(Color.white.shadow(radius: 2, y: -2))
@@ -89,26 +80,17 @@ struct CategoryAddScreen: View {
     }
 }
 
-// MARK: - Custom Header View for Add Screen
-// SỬA ĐỔI: Header chỉ còn nút Huỷ và tiêu đề, không có nút Lưu
+// MARK: - Custom Header View for Add Screen (Giữ nguyên)
 struct CustomAddHeader: View {
     let onCancel: () -> Void
     
     var body: some View {
         HStack {
-            Button("Huỷ") {
-                onCancel()
-            }
-            .frame(width: 80, alignment: .leading)
-            
+            Button("Huỷ") { onCancel() }
+                .frame(width: 80, alignment: .leading)
             Spacer()
-            
-            Text("Thêm danh mục")
-                .font(.headline)
-            
+            Text("Thêm danh mục").font(.headline)
             Spacer()
-            
-            // Placeholder để căn giữa tiêu đề
             Spacer().frame(width: 80)
         }
         .padding()
@@ -117,7 +99,7 @@ struct CustomAddHeader: View {
     }
 }
 
-// MARK: - Icon View
+// MARK: - Icon View (Giữ nguyên)
 struct IconView: View {
     let iconInfo: IconProvider.IconInfo
     let isSelected: Bool
@@ -137,3 +119,4 @@ struct IconView: View {
             )
     }
 }
+

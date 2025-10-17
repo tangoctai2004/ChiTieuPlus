@@ -10,9 +10,11 @@ import SwiftUI
 @main
 struct QuanLyChiTieuApp: App {
     let persistenceController = PersistenceController.shared
+    
 
     var body: some Scene {
         WindowGroup {
+//            DataTestView()
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
