@@ -1,10 +1,3 @@
-//
-//  HomeScreen.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 26/9/25.
-//
-
 import SwiftUI
 import CoreData
 
@@ -23,6 +16,7 @@ extension View {
 }
 
 // MARK: - Transaction Row
+// (Không thay đổi)
 struct TransactionRow: View {
     let transaction: Transaction
     
@@ -41,7 +35,7 @@ struct TransactionRow: View {
                     )
                     .frame(width: 48, height: 48)
                 
-                Image(systemName: transaction.type == "income" ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
+                Image(systemName: IconProvider.color(for: transaction.category?.iconName) == .primary ? "questionmark" : transaction.category?.iconName ?? "questionmark")
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundColor(.white)
             }
@@ -66,7 +60,7 @@ struct TransactionRow: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.systemGray6)) // nền thẻ thay vì trắng
+                .fill(Color(.systemGray6))
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
         )
         .contentShape(Rectangle())
@@ -90,7 +84,6 @@ struct HomeScreen: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // ✅ Nền tổng thể dịu mắt
                 LinearGradient(
                     colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
                     startPoint: .topLeading,
@@ -99,13 +92,11 @@ struct HomeScreen: View {
                 .ignoresSafeArea()
                 
                 VStack {
-                    // ✅ App title
                     Text("ChiTiêu+")
                         .font(.system(size: 36, weight: .heavy, design: .rounded))
                         .gradientText(colors: [.yellow, .orange, .green])
                         .padding(.top, 10)
                     
-                    // ✅ Toggle
                     Picker("", selection: $selectedFilter) {
                         ForEach(FilterType.allCases, id: \.self) { type in
                             Text(type.rawValue).tag(type)
@@ -114,7 +105,6 @@ struct HomeScreen: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
                     
-                    // ✅ Nội dung chính
                     if filteredTransactions().isEmpty {
                         VStack(spacing: 12) {
                             Image(systemName: "tray")
@@ -138,7 +128,10 @@ struct HomeScreen: View {
                                         
                                         ForEach(group.items, id: \.id) { transaction in
                                             NavigationLink {
-                                                TransactionDetailScreen(transaction: transaction) {
+                                                // SỬA ĐỔI QUAN TRỌNG:
+                                                // Cập nhật lại cách khởi tạo TransactionDetailScreen
+                                                // để nó có thể tạo ra TransactionEditViewModel.
+                                                TransactionDetailScreen(transaction: transaction, context: context) {
                                                     fetchTransactions()
                                                 }
                                             } label: {
@@ -163,7 +156,8 @@ struct HomeScreen: View {
         }
     }
     
-    // MARK: - Filtering
+    // MARK: - Filtering & Data Fetching
+    
     private func filteredTransactions() -> [Transaction] {
         switch selectedFilter {
         case .all:
@@ -180,21 +174,18 @@ struct HomeScreen: View {
         let groupDict = Dictionary(grouping: filtered) { transaction in
             Calendar.current.startOfDay(for: transaction.date ?? Date())
         }
-        let groupArray = groupDict.map { (key, value) in
-            (date: key, items: value.sorted { ($0.date ?? Date()) > ($1.date ?? Date()) })
+        return groupDict.map { (key, value) in
+            (date: key, items: value)
         }.sorted { $0.date > $1.date }
-        return groupArray
     }
     
     private func fetchTransactions() {
         let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.createAt, ascending: false)]
         
         do {
-            let transactions = try context.fetch(request)
-            allTransactions = transactions
-            groupedTransactions = groupedFilteredTransactions()
-            refreshId = UUID()
+            allTransactions = try context.fetch(request)
+            refreshId = UUID() // Cập nhật ID để force refresh UI
         } catch {
             print("Lỗi khi fetch Transaction: \(error)")
         }

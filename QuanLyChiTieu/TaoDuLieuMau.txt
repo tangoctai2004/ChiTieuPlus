@@ -4,84 +4,76 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var context
 
-    // Các tên danh mục mặc định theo phân loại Chi tiêu / Thu nhập
-    let defaultExpenseCategories = [
-        "Ăn uống",
-        "Chi tiêu hàng ngày",
-        "Quần áo",
-        "Mỹ phẩm",
-        "Phí tiệc tùng",
-        "Y tế",
-        "Giáo dục",
-        "Tiền điện",
-        "Đi lại",
-        "Phí liên lạc",
-        "Tiền nhà"
+    // Dữ liệu mẫu (giữ nguyên)
+    let defaultExpenses: [(name: String, iconName: String)] = [
+        ("Ăn uống", "fork.knife"),
+        ("Chi tiêu hàng ngày", "cart.fill"),
+        ("Quần áo", "tshirt.fill"),
+        ("Mỹ phẩm", "hand.raised.fingers.spread.fill"),
+        ("Phí tiệc tùng", "party.popper.fill"),
+        ("Y tế", "pills.fill"),
+        ("Giáo dục", "graduationcap.fill"),
+        ("Tiền điện", "bolt.fill"),
+        ("Đi lại", "bus.fill"),
+        ("Phí liên lạc", "phone.fill"),
+        ("Tiền nhà", "house.fill")
     ]
-    let defaultIncomeCategories = [
-        "Tiền lương",
-        "Tiền phụ cấp",
-        "Tiền thưởng",
-        "Thu nhập phụ",
-        "Đầu tư",
-        "Thu nhập tạm thời"
+    
+    let defaultIncomes: [(name: String, iconName: String)] = [
+        ("Tiền lương", "banknote.fill"),
+        ("Tiền phụ cấp", "person.3.fill"),
+        ("Tiền thưởng", "dollarsign.circle.fill"),
+        ("Thu nhập phụ", "lightbulb.fill"),
+        ("Đầu tư", "chart.line.uptrend.xyaxis"),
+        ("Thu nhập tạm thời", "briefcase.fill")
     ]
 
+    // Hàm tạo dữ liệu mẫu (giữ nguyên)
     func seedDefaultCategoriesIfNeeded(context: NSManagedObjectContext) {
-        // 1. Fetch các Category hiện có
-        let fetch: NSFetchRequest<Category> = Category.fetchRequest()
-        var existing: [Category] = []
+        let fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
+        
         do {
-            existing = try context.fetch(fetch)
+            let existingCount = try context.count(for: fetchRequest)
+            guard existingCount == 0 else {
+                print("✅ Dữ liệu Category đã tồn tại, không cần seed.")
+                return
+            }
         } catch {
-            print("❌ Lỗi fetch Category: \(error)")
+            print("❌ Lỗi khi kiểm tra Category: \(error)")
+            return
         }
 
-        // 2. Map name -> Category để kiểm tra đã tồn tại
-        var map: [String: Category] = [:]
-        for cat in existing {
-            if let name = cat.name {
-                map[name] = cat
-            }
+        for categoryInfo in defaultExpenses {
+            let cat = Category(context: context)
+            cat.id = UUID()
+            cat.name = categoryInfo.name
+            cat.type = "expense"
+            cat.iconName = categoryInfo.iconName
+            cat.createAt = Date()
+            cat.updateAt = Date()
         }
 
-        // 3. Tạo các category expense nếu chưa có
-        for name in defaultExpenseCategories {
-            if map[name] == nil {
-                let cat = Category(context: context)
-                cat.id = UUID()
-                cat.name = name
-                cat.type = "expense"
-                cat.createAt = Date()
-                cat.updateAt = Date()
-                map[name] = cat
-            }
+        for categoryInfo in defaultIncomes {
+            let cat = Category(context: context)
+            cat.id = UUID()
+            cat.name = categoryInfo.name
+            cat.type = "income"
+            cat.iconName = categoryInfo.iconName
+            cat.createAt = Date()
+            cat.updateAt = Date()
         }
 
-        // 4. Tạo các category income nếu chưa có
-        for name in defaultIncomeCategories {
-            if map[name] == nil {
-                let cat = Category(context: context)
-                cat.id = UUID()
-                cat.name = name
-                cat.type = "income"
-                cat.createAt = Date()
-                cat.updateAt = Date()
-                map[name] = cat
-            }
-        }
-
-        // 5. Save nếu có thêm mới
         do {
             try context.save()
-            print("✅ Đã seed các category mặc định")
+            print("✅ Đã seed thành công các category mặc định.")
         } catch {
-            print("❌ Lỗi lưu các category mặc định: \(error)")
+            print("❌ Lỗi khi lưu các category mặc định: \(error)")
         }
     }
 
+    // SỬA ĐỔI: Chỉ hiển thị dòng chữ bạn yêu cầu
     var body: some View {
-        Text("Hello")
+        Text("Đã tạo thành công dữ liệu Category mẫu")
             .onAppear {
                 seedDefaultCategoriesIfNeeded(context: context)
             }

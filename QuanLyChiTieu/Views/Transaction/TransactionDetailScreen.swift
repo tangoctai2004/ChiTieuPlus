@@ -2,186 +2,209 @@ import SwiftUI
 import CoreData
 
 struct TransactionDetailScreen: View {
-    @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var transaction: Transaction
+    
+    @StateObject private var viewModel: TransactionEditViewModel
+    
+    // State để quản lý alert xác nhận xoá
+    @State private var showingDeleteConfirmation = false
+    
     let onUpdate: () -> Void
-
-    @State private var title: String = ""
-    @State private var rawAmount: String = ""
-    @State private var formattedAmount: String = ""
-    @State private var date: Date = Date()
-    @State private var type: String = "expense"
-    @State private var selectedCategory: Category?
-    @State private var note: String = ""
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Category.name, ascending: true)],
         animation: .default
     ) private var categories: FetchedResults<Category>
 
+    init(transaction: Transaction, context: NSManagedObjectContext, onUpdate: @escaping () -> Void) {
+        _viewModel = StateObject(wrappedValue: TransactionEditViewModel(transaction: transaction, context: context))
+        self.onUpdate = onUpdate
+    }
+
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Nền gradient giống TransactionAddScreen
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+        VStack(spacing: 0) {
+            // MARK: - Custom Header
+            CustomDetailHeader(
+                selectedType: $viewModel.type,
+                onBack: { dismiss() }
+            )
 
-                ScrollView {
-                    VStack(spacing: 20) {
-                        
-                        // Tiêu đề màn hình
-                        Text("Chi tiết giao dịch")
-                            .font(.system(size: 28, weight: .heavy, design: .rounded))
-                            .gradientText(colors: [.yellow, .orange, .green])
-                            .padding(.top, 10)
-                        
-                        // Ô nhập tiêu đề
-                        TextFieldWithIcon(
-                            systemName: "text.cursor",
-                            placeholder: "Tiêu đề",
-                            text: $title
-                        )
-
-                        // Số tiền
+            // MARK: - Form Inputs
+            ScrollView {
+                VStack(spacing: 12) {
+                    // --- Thẻ nhập thông tin (cố định) ---
+                    VStack(spacing: 0) {
                         HStack {
-                            TextFieldWithIcon(
-                                systemName: "dollarsign.circle",
-                                placeholder: "Số tiền",
-                                text: $formattedAmount
-                            )
-                            .keyboardType(.numberPad)
-                            .onChange(of: formattedAmount) { newValue in
-                                let digits = newValue.filter { "0123456789".contains($0) }
-                                rawAmount = digits
-                                formattedAmount = AppUtils.formatCurrencyInput(digits)
-                            }
-
-                            Text("VNĐ")
-                                .foregroundColor(.secondary)
-                                .padding(.trailing, 8)
-                        }
-
-                        // Ngày giao dịch
-                        LabeledContent {
-                            DatePicker("", selection: $date, displayedComponents: .date)
-                                .labelsHidden()
-                        } label: {
-                            Label("Ngày giao dịch", systemImage: "calendar")
-                                .foregroundColor(.primary)
+                            Text("Tiêu đề")
+                                .font(.subheadline)
+                            TextField("Nhập tiêu đề", text: $viewModel.transactionTitle)
+                                .multilineTextAlignment(.trailing)
+                                .font(.subheadline)
                         }
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.systemBackground)))
-                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-
-                        // Loại giao dịch (Thu / Chi)
-                        PickerWithStyle(
-                            title: "Loại giao dịch",
-                            systemImage: "arrow.left.arrow.right.circle",
-                            selection: $type,
-                            options: AppUtils.transactionTypes.map { ($0, AppUtils.displayType($0)) }
-                        )
-
-                        // Danh mục
-                        PickerWithStyleCategory(
-                            title: "Danh mục",
-                            systemImage: "folder",
-                            selection: $selectedCategory,
-                            categories: categories.filter { $0.type == type }
-                        )
-
-                        // Ghi chú
-                        TextFieldWithIcon(
-                            systemName: "note.text",
-                            placeholder: "Ghi chú",
-                            text: $note
-                        )
-
-                        // Nút lưu chỉnh sửa
-                        Button(action: updateTransaction) {
-                            Text("💾 Lưu chỉnh sửa")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
+                        Divider().padding(.leading)
+                        
+                        HStack {
+                            Text("Ngày")
+                                .font(.subheadline)
+                            Spacer()
+                            DatePicker("", selection: $viewModel.date, displayedComponents: .date)
+                                .labelsHidden()
+                                .environment(\.locale, Locale(identifier: "vi_VN"))
                         }
-                        .disabled(!canSave)
-                        .padding(.top, 10)
-
-                        // Nút xóa
-                        Button(role: .destructive, action: deleteTransaction) {
-                            Text("🗑️ Xoá giao dịch")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.red)
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
+                        .padding()
+                        Divider().padding(.leading)
+                        
+                        HStack {
+                            Text("Ghi chú")
+                                .font(.subheadline)
+                            TextField("Chưa nhập vào", text: $viewModel.note)
+                                .multilineTextAlignment(.trailing)
+                                .font(.subheadline)
                         }
-                        .padding(.top, 5)
+                        .padding()
+                        Divider().padding(.leading)
+                        
+                        HStack {
+                            Text(viewModel.type == "expense" ? "Tiền chi" : "Tiền thu")
+                                .font(.subheadline)
+                            Spacer()
+                            TextField("0", text: $viewModel.formattedAmount)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .font(.subheadline)
+                                .onChange(of: viewModel.formattedAmount) { newValue in
+                                    let digits = newValue.filter { "0123456789".contains($0) }
+                                    viewModel.rawAmount = digits
+                                    viewModel.formattedAmount = AppUtils.formatCurrencyInput(digits)
+                                }
+                            Text("đ")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
                     }
-                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    
+                    // MARK: - Category Grid (Scrollable)
+                    VStack(alignment: .leading) {
+                        Text("Danh mục")
+                            .font(.subheadline)
+                            .padding([.top, .horizontal])
+
+                        ScrollView {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
+                                ForEach(categories.filter { $0.type == viewModel.type }) { category in
+                                    CategoryGridButton(
+                                        category: category,
+                                        isSelected: viewModel.selectedCategory == category
+                                    ) {
+                                        viewModel.selectedCategory = category
+                                    }
+                                }
+                            }
+                            .padding([.horizontal, .bottom])
+                        }
+                    }
+                    .background(Color.white)
+                    .cornerRadius(10)
                 }
+                .padding()
             }
-            .navigationBarHidden(true)
-            .onAppear(perform: loadData)
+            
+            // SỬA ĐỔI: Hai nút đặt cạnh nhau trong HStack
+            // MARK: - Action Buttons
+            HStack(spacing: 15) {
+                // Nút Xoá
+                Button(role: .destructive) {
+                    showingDeleteConfirmation = true
+                } label: {
+                    Text("Xoá")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.red)
+                        .cornerRadius(25) // Tăng độ bo tròn
+                }
+                
+                // Nút Lưu Chỉnh Sửa
+                Button(action: updateTransaction) {
+                    Text("Lưu chỉnh sửa")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.gray) // Đổi màu thành xám
+                        .cornerRadius(25) // Tăng độ bo tròn
+                }
+                .disabled(!viewModel.canSave)
+                .opacity(viewModel.canSave ? 1.0 : 0.6)
+            }
+            .padding()
+            .background(Color.white.shadow(radius: 2, x: 0, y: -2))
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onTapGesture {
+            hideKeyboard()
+        }
+        .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
+            Button("Chắc chắn xoá", role: .destructive) { delete() }
+            Button("Không", role: .cancel) {}
+        } message: {
+            Text("Bạn có chắc chắn muốn xoá giao dịch này không?")
         }
     }
 
-    // MARK: - Helpers
-    private func loadData() {
-        title = transaction.title ?? ""
-        rawAmount = String(Int(transaction.amount))
-        formattedAmount = AppUtils.formatCurrencyInput(rawAmount)
-        date = transaction.date ?? Date()
-        type = transaction.type ?? "expense"
-        selectedCategory = transaction.category
-        note = transaction.note ?? ""
-    }
-
-    private var canSave: Bool {
-        !title.isEmpty && AppUtils.currencyToDouble(rawAmount) > 0 && selectedCategory != nil
-    }
-
+    // MARK: - Helper Functions
     private func updateTransaction() {
-        transaction.title = title
-        transaction.amount = AppUtils.currencyToDouble(rawAmount)
-        transaction.date = date
-        transaction.type = type
-        transaction.note = note
-        transaction.category = selectedCategory
-        transaction.updateAt = Date()
-        do {
-            try context.save()
-            onUpdate()
-            dismiss()
-        } catch {
-            print("❌ Lỗi khi sửa Transaction: \(error)")
-        }
+        viewModel.saveChanges()
+        onUpdate()
+        dismiss()
     }
 
-    private func deleteTransaction() {
-        context.delete(transaction)
-        do {
-            try context.save()
-            onUpdate()
-            dismiss()
-        } catch {
-            print("❌ Lỗi khi xoá Transaction: \(error)")
+    private func delete() {
+        viewModel.deleteTransaction()
+        onUpdate()
+        dismiss()
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+// MARK: - Custom Header for Detail Screen
+struct CustomDetailHeader: View {
+    @Binding var selectedType: String
+    let onBack: () -> Void
+    
+    var body: some View {
+        HStack {
+            Button(action: onBack) {
+                Image(systemName: "chevron.left")
+                    .font(.title3.weight(.medium))
+            }
+            .frame(width: 44, alignment: .leading)
+            
+            Spacer()
+            
+            Picker("", selection: $selectedType) {
+                Text("Tiền chi").tag("expense")
+                Text("Tiền thu").tag("income")
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 180) // Thu nhỏ picker
+            
+            Spacer()
+            
+            // Placeholder để căn giữa picker
+            Spacer().frame(width: 44)
         }
+        .padding(.horizontal)
+        .frame(height: 44)
+        .background(Color.white)
     }
 }

@@ -1,79 +1,36 @@
-//
-//  TransactionViewModel.swift
-//  QuanLyChiTieu
-//
-//  Updated by Tạ Ngọc Tài on 25/9/25.
-//
-
 import Foundation
 import CoreData
 import Combine
 
-class TransactionViewModel: ObservableObject{
-//    Hien thi danh sach giao dich
+class TransactionViewModel: ObservableObject {
     @Published var transactions: [Transaction] = []
     
     private let context: NSManagedObjectContext
     
-    init(context: NSManagedObjectContext = CoreDataStack.shared.context){
+    // Yêu cầu context được truyền vào để nhất quán
+    init(context: NSManagedObjectContext) {
         self.context = context
         fetchAllTransactions()
     }
     
-    func fetchAllTransactions(){
+    // Giữ lại hàm fetch toàn bộ danh sách
+    func fetchAllTransactions() {
         let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
-        do{
+        do {
             transactions = try context.fetch(request)
-        }catch{
+        } catch {
             print("Lay du lieu that bai, loi: \(error)")
         }
     }
     
-    func addTransaction(title: String, amount: Double, type: String, date: Date, note: String?, category: Category){
-        let newTransaction = Transaction(context: context)
-        newTransaction.id = UUID()
-        newTransaction.title = title
-        newTransaction.amount = amount
-        newTransaction.type = (type == "income" || type == "expense") ? type : "expense"
-        newTransaction.date = date
-        newTransaction.note = note
-        newTransaction.category = category
-        newTransaction.createAt = Date()
-        newTransaction.updateAt = Date()
-        
-        saveContext()
-        fetchAllTransactions()
-    }
-    
-    func deleteTransaction(_ transaction: Transaction){
-        context.delete(transaction)
-        
-        saveContext()
-        fetchAllTransactions()
-    }
-    
-    func updateTransaction(_ transaction: Transaction, title: String, amount: Double, type: String, date: Date, note: String?, category: Category){
-        transaction.title = title
-        transaction.amount = amount
-        transaction.type = (type == "income" || type == "expense") ? type : "expense"
-        transaction.date = date
-        transaction.note = note
-        transaction.category = category
-        transaction.updateAt = Date()
-        
-        saveContext()
-        fetchAllTransactions()
-    }
-    
+    // Giữ lại các hàm fetch và xử lý dữ liệu cho báo cáo, thống kê
     // MARK: - Lấy tất cả giao dịch theo tháng và năm
     func fetchTransactions(forMonth month: Int, year: Int) -> [Transaction] {
-        // Nếu month hoặc year không hợp lệ thì trả về []
         guard month > 0, month <= 12, year > 0 else { return [] }
         
         let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
         
-        // Tạo ngày bắt đầu và kết thúc tháng
         let calendar = Calendar.current
         var components = DateComponents()
         components.year = year
@@ -87,7 +44,6 @@ class TransactionViewModel: ObservableObject{
         endComponents.day = 1
         guard let endDate = calendar.date(from: endComponents) else { return [] }
         
-        // Lọc theo khoảng ngày
         request.predicate = NSPredicate(format: "date >= %@ AND date < %@", startDate as NSDate, endDate as NSDate)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: true)]
         
@@ -112,14 +68,5 @@ class TransactionViewModel: ObservableObject{
         .sorted { $0.date < $1.date }
     }
     
-    private func saveContext(){
-        if context.hashValue != 0{
-            do{
-                try context.save()
-            }catch{
-                print("Luu khong thanh cong, loi: \(error)")
-            }
-        }
-    }
+    // Hàm saveContext không còn cần thiết ở đây vì ViewModel này chỉ đọc dữ liệu
 }
-

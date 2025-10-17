@@ -11,11 +11,9 @@ import CoreData
 
 
 extension Transaction {
-
     @nonobjc public class func fetchRequest() -> NSFetchRequest<Transaction> {
         return NSFetchRequest<Transaction>(entityName: "Transaction")
     }
-
     @NSManaged public var amount: Double
     @NSManaged public var createAt: Date?
     @NSManaged public var date: Date?
@@ -25,9 +23,6 @@ extension Transaction {
     @NSManaged public var type: String?
     @NSManaged public var updateAt: Date?
     @NSManaged public var category: Category?
-
 }
-
 extension Transaction : Identifiable {
-
 }
