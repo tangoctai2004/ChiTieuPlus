@@ -1,155 +1,171 @@
-//
-//  TransactionAddScreen.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 26/9/25.
-//
-
 import SwiftUI
 import CoreData
 
+// MARK: - Main View
 struct TransactionAddScreen: View {
     @Environment(\.managedObjectContext) private var context
-    @Environment(\.dismiss) private var dismiss
-    @State private var showSuccessToast: Bool = false
     
-    // Trạng thái lưu dữ liệu
-    @State private var title: String = ""
+    // SỬA ĐỔI: Thêm state cho Tiêu đề và đổi tên `title` thành `note` cho rõ ràng
+    @State private var transactionTitle: String = ""
+    @State private var note: String = ""
     @State private var rawAmount: String = ""
     @State private var formattedAmount: String = ""
     @State private var date: Date = Date()
     @State private var type: String = "expense"
     @State private var selectedCategory: Category?
-    @State private var note: String = ""
     
-    // Fetch danh mục từ CoreData
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Category.name, ascending: true)],
         animation: .default
     ) private var categories: FetchedResults<Category>
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // ✅ Nền gradient đồng bộ
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 20) {
-                        
-                        // ✅ Tiêu đề app
-                        Text("Thêm giao dịch")
-                            .font(.system(size: 28, weight: .heavy, design: .rounded))
-                            .gradientText(colors: [.yellow, .orange, .green])
-                            .padding(.top, 10)
-                        
-                        // Ô nhập tiêu đề
-                        TextFieldWithIcon(
-                            systemName: "text.cursor",
-                            placeholder: "Tiêu đề",
-                            text: $title
-                        )
-                        
-                        // Số tiền
+        VStack(spacing: 0) {
+            // MARK: - Header (Segmented Control)
+            Picker("Loại giao dịch", selection: $type.animation()) {
+                Text("Tiền chi").tag("expense")
+                Text("Tiền thu").tag("income")
+            }
+            .pickerStyle(.segmented)
+            .padding()
+            .background(Color.white)
+
+            // MARK: - Form Inputs
+            ScrollView {
+                VStack(spacing: 12) {
+                    VStack(spacing: 0) {
+                        // SỬA ĐỔI: Thêm dòng Tiêu đề tại đây
                         HStack {
-                            TextFieldWithIcon(
-                                systemName: "dollarsign.circle",
-                                placeholder: "Số tiền",
-                                text: $formattedAmount
-                            )
-                            .keyboardType(.numberPad)
-                            .onChange(of: formattedAmount) { newValue in
-                                let digits = newValue.filter { "0123456789".contains($0) }
-                                rawAmount = digits
-                                formattedAmount = AppUtils.formatCurrencyInput(digits)
-                            }
-                            
-                            Text("VNĐ")
-                                .foregroundColor(.secondary)
-                                .padding(.trailing, 8)
-                        }
-                        
-                        // Ngày giao dịch
-                        LabeledContent {
-                            DatePicker("", selection: $date, displayedComponents: .date)
-                                .labelsHidden()
-                        } label: {
-                            Label("Ngày giao dịch", systemImage: "calendar")
-                                .foregroundColor(.primary)
+                            Text("Tiêu đề")
+                                .font(.headline)
+                            TextField("Nhập tiêu đề", text: $transactionTitle)
+                                .multilineTextAlignment(.trailing)
                         }
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.systemBackground)))
-                        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+
+                        Divider().padding(.leading)
                         
-                        // Loại giao dịch (Thu / Chi)
-                        PickerWithStyle(
-                            title: "Loại giao dịch",
-                            systemImage: "arrow.left.arrow.right.circle",
-                            selection: $type,
-                            options: AppUtils.transactionTypes.map { ($0, AppUtils.displayType($0)) }
-                        )
-                        
-                        PickerWithStyleCategory(
-                            title: "Danh mục",
-                            systemImage: "folder",
-                            selection: $selectedCategory,
-                            categories: categories.filter { $0.type == type }
-                        )
-                        
-                        TextFieldWithIcon(
-                            systemName: "note.text",
-                            placeholder: "Ghi chú",
-                            text: $note
-                        )
-                        
-                        Button(action: saveTransaction) {
-                            Text("💾 Lưu giao dịch")
+                        // Ngày
+                        HStack {
+                            Text("Ngày")
                                 .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(16)
-                                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
+                            Spacer()
+                            DatePicker(
+                                "",
+                                selection: $date,
+                                displayedComponents: .date
+                            )
+                            .labelsHidden()
+                            .environment(\.locale, Locale(identifier: "vi_VN"))
                         }
-                        .disabled(!canSave)
-                        .padding(.top, 10)
+                        .padding()
+                        
+                        Divider().padding(.leading)
+                        
+                        // Ghi chú
+                        HStack {
+                            Text("Ghi chú")
+                                .font(.headline)
+                            TextField("Chưa nhập vào", text: $note)
+                                .multilineTextAlignment(.trailing)
+                        }
+                        .padding()
+                        
+                        Divider().padding(.leading)
+                        
+                        // Tiền chi / Tiền thu
+                        HStack {
+                            Text(type == "expense" ? "Tiền chi" : "Tiền thu")
+                                .font(.headline)
+                            Spacer()
+                            TextField("0", text: $formattedAmount)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .onChange(of: formattedAmount) { newValue in
+                                    let digits = newValue.filter { "0123456789".contains($0) }
+                                    rawAmount = digits
+                                    formattedAmount = digits
+                                }
+                            Text("đ")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
                     }
-                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    
+                    
+                    // MARK: - Category Grid
+                    VStack(alignment: .leading) {
+                        Text("Danh mục")
+                            .font(.headline)
+                            .padding(.leading)
+                            .padding(.top)
+
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 85))], spacing: 15) {
+                            ForEach(categories.filter { $0.type == self.type }) { category in
+                                CategoryGridButton(
+                                    category: category,
+                                    isSelected: self.selectedCategory == category
+                                ) {
+                                    self.selectedCategory = category
+                                }
+                            }
+                            
+                            NavigationLink(destination: Text("Màn hình chỉnh sửa danh mục")) {
+                                EditCategoryButton()
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom)
+                        
+                    }
+                    .background(Color.white)
+                    .cornerRadius(10)
+
                 }
+                .padding()
             }
-            .alert("✅ Đã thêm giao dịch", isPresented: $showSuccessToast) {
-                Button("Đồng ý", role: .cancel) { dismiss() }
+            
+            // MARK: - Save Button
+            Button(action: saveTransaction) {
+                Text(type == "expense" ? "Nhập khoản chi" : "Nhập khoản thu")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.gray.opacity(0.9))
+                    .cornerRadius(12)
             }
-            .navigationBarHidden(true) // Ẩn header mặc định, dùng tiêu đề custom
+            .disabled(!canSave)
+            .padding([.horizontal, .bottom])
+            .background(Color.white.shadow(radius: 2, x: 0, y: -2))
+
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .onTapGesture {
+            hideKeyboard()
         }
     }
     
-    // Điều kiện lưu
+    // MARK: - Helper Functions
+    
     private var canSave: Bool {
-        !title.isEmpty && AppUtils.currencyToDouble(rawAmount) > 0 && selectedCategory != nil
+        // Tiêu đề và Ghi chú có thể trống, nhưng tiền và danh mục thì không
+        !rawAmount.isEmpty && (Double(rawAmount) ?? 0) > 0 && selectedCategory != nil
     }
     
-    // Lưu vào CoreData
     private func saveTransaction() {
         let newTransaction = Transaction(context: context)
         newTransaction.id = UUID()
-        newTransaction.title = title
-        newTransaction.amount = AppUtils.currencyToDouble(rawAmount)
+        // SỬA ĐỔI: Lưu cả tiêu đề và ghi chú
+        newTransaction.title = transactionTitle.isEmpty ? (selectedCategory?.name ?? "Giao dịch") : transactionTitle
+        newTransaction.note = note
+        newTransaction.amount = Double(rawAmount) ?? 0
         newTransaction.date = date
         newTransaction.type = type
-        newTransaction.note = note
         newTransaction.category = selectedCategory
         newTransaction.createAt = Date()
         newTransaction.updateAt = Date()
@@ -157,20 +173,71 @@ struct TransactionAddScreen: View {
         do {
             try context.save()
             resetForm()
-            showSuccessToast = true
         } catch {
             print("❌ Lỗi khi lưu Transaction: \(error)")
         }
     }
     
     private func resetForm() {
-        title = ""
+        // SỬA ĐỔI: Reset cả tiêu đề và ghi chú
+        transactionTitle = ""
+        note = ""
         rawAmount = ""
         formattedAmount = ""
         date = Date()
-        type = "expense"
         selectedCategory = nil
-        note = ""
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+
+// MARK: - Subviews for Category Grid
+// (Không thay đổi)
+struct CategoryGridButton: View {
+    let category: Category
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: category.iconName ?? "questionmark.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? .orange : .primary)
+                
+                Text(category.name ?? "N/A")
+                    .font(.caption)
+                    .foregroundColor(isSelected ? .orange : .secondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(width: 80, height: 80)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? Color.orange : Color.clear, lineWidth: 2)
+            )
+        }
+    }
+}
+
+struct EditCategoryButton: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("Chỉnh sửa")
+                .font(.caption)
+                .foregroundColor(.primary)
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(width: 80, height: 80)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
     }
 }
 

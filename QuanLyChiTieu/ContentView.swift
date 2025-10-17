@@ -1,7 +1,7 @@
 import SwiftUI
 
-
 struct ContentView: View {
+    // Lấy context từ môi trường chung của ứng dụng
     @Environment(\.managedObjectContext) private var context
     @State private var selectedTab: Tab = .home
     
@@ -13,10 +13,13 @@ struct ContentView: View {
                     HomeScreen()
                         .padding(.bottom, 80)
                 case .add:
-                    CategoryManageScreen()
+                    // SỬA ĐỔI QUAN TRỌNG:
+                    // Truyền context vào CategoryListScreen.
+                    // Đây là bước kết nối để mọi thứ hoạt động đồng bộ.
+                    CategoryListScreen(context: context)
                         .padding(.bottom, 80)
                 case .dashboard:
-                    TransactionAddScreen()
+                    TransactionAddScreen() // <- Trang này không cần thay đổi gì cả
                         .padding(.bottom, 80)
                 case .setting:
                     DashboardScreen()
@@ -50,7 +53,7 @@ struct CustomTabBar: View {
             
             TabBarButton(tab: .add,
                          title: "Add",
-                         systemImage: "plus.circle.fill",
+                         systemImage: "tray.full",
                          selectedTab: $selectedTab)
             
             TabBarButton(tab: .dashboard,

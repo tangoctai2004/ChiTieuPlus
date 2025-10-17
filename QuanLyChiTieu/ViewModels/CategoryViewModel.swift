@@ -10,19 +10,18 @@ import CoreData
 import Combine
 
 class CategoryViewModel: ObservableObject {
-//    Hien thi danh sach category
     @Published var categories: [Category] = []
-//    context de core data thao tac voi database
     private let context: NSManagedObjectContext
     
-//    Truyen context tu CoreDataStack
-    init(context: NSManagedObjectContext = CoreDataStack.shared.context){
+    // SỬA ĐỔI: Yêu cầu context phải được truyền vào khi khởi tạo.
+    // Giờ đây nó sẽ dùng context mà TransactionAddScreen đang dùng.
+    init(context: NSManagedObjectContext){
         self.context = context
         fecthAllCategories()
     }
-//    Fetch toan bo danh sach ban dau
+    
+    // Các hàm bên dưới không có gì thay đổi về logic
     func fecthAllCategories(){
-//        Du lieu duoc sap xep theo ten tang dan
         let request: NSFetchRequest<Category> = Category.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         do{
@@ -32,11 +31,12 @@ class CategoryViewModel: ObservableObject {
         }
     }
     
-    func addCategory(name: String, type: String){
+    func addCategory(name: String, type: String, iconName: String){
         let newCategory = Category(context: context)
         newCategory.id = UUID()
         newCategory.name = name
         newCategory.type = type
+        newCategory.iconName = iconName
         newCategory.createAt = Date()
         newCategory.updateAt = Date()
         
@@ -44,11 +44,12 @@ class CategoryViewModel: ObservableObject {
         fecthAllCategories()
     }
     
-    func updateCategory(_ category: Category, name: String, type: String){
+    func updateCategory(_ category: Category, name: String, type: String, iconName: String){
         category.name = name
         category.type = type
+        category.iconName = iconName
         category.updateAt = Date()
-        
+                
         saveContext()
         fecthAllCategories()
     }
@@ -67,4 +68,3 @@ class CategoryViewModel: ObservableObject {
         }
     }
 }
-
