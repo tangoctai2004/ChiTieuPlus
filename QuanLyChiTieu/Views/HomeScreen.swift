@@ -1,43 +1,26 @@
 import SwiftUI
 import CoreData
 
-// MARK: - Gradient Text Modifier (Giữ nguyên)
-extension View {
-    func gradientText(colors: [Color]) -> some View {
-        self.overlay(
-            LinearGradient(
-                colors: colors,
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
-        .mask(self)
-    }
-}
-
 // MARK: - Transaction Row (Giữ nguyên)
 struct TransactionRow: View {
-    let transaction: Transaction
+    @ObservedObject var transaction: Transaction
+    
+    private var iconName: String {
+        IconProvider.color(for: transaction.category?.iconName) == .primary ? "questionmark" : transaction.category?.iconName ?? "questionmark"
+    }
+    
+    private var iconColor: Color {
+        IconProvider.color(for: transaction.category?.iconName)
+    }
     
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: transaction.type == "income"
-                                ? [Color.green.opacity(0.5), Color.green]
-                                : [Color.red.opacity(0.5), Color.red],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 48, height: 48)
-                
-                Image(systemName: IconProvider.color(for: transaction.category?.iconName) == .primary ? "questionmark" : transaction.category?.iconName ?? "questionmark")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(.white)
-            }
+        HStack(spacing: 16) {
+            Image(systemName: iconName)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(iconColor)
+                .frame(width: 44, height: 44)
+                .background(iconColor.opacity(0.15))
+                .clipShape(Circle())
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(transaction.title ?? "Không tên")
@@ -56,22 +39,19 @@ struct TransactionRow: View {
                 .fontWeight(.bold)
                 .foregroundColor(transaction.type == "income" ? .green : .red)
         }
-        .padding(12)
+        .padding(15)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.systemGray6))
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.primary.opacity(0.1), radius: 8, x: 0, y: 4)
         )
-        .contentShape(Rectangle())
     }
 }
 
-// MARK: - HomeScreen
+// MARK: - HomeScreen (ĐÃ CẬP NHẬT)
 struct HomeScreen: View {
-    // SỬA ĐỔI: Sử dụng ViewModel làm nguồn dữ liệu
     @StateObject private var viewModel = TransactionViewModel()
     
-    // Các state điều khiển UI được giữ nguyên
     @State private var selectedFilter: FilterType = .all
     enum FilterType: String, CaseIterable {
         case all = "Tất cả"
@@ -79,55 +59,75 @@ struct HomeScreen: View {
         case expense = "Chi tiêu"
     }
     
+    // --- TẠO BIẾN GRADIENT ---
+    private var gradient: LinearGradient {
+        LinearGradient(
+            colors: [.red, .purple],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+    
     var body: some View {
         NavigationStack {
-            ZStack {
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.1), Color.green.opacity(0.1), Color.orange.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+            Color(.systemGroupedBackground)
                 .ignoresSafeArea()
-                
-                VStack {
-                    Text("ChiTiêu+")
-                        .font(.system(size: 36, weight: .heavy, design: .rounded))
-                        .gradientText(colors: [.yellow, .orange, .green])
-                        .padding(.top, 10)
-                    
-                    Picker("", selection: $selectedFilter) {
-                        ForEach(FilterType.allCases, id: \.self) { type in
-                            Text(type.rawValue).tag(type)
+                .overlay(
+                    VStack(spacing: 0) {
+                        VStack(spacing: 0) {
+                            VStack(spacing: 0) {
+                                // --- THAY ĐỔI Ở ĐÂY ---
+                                (Text("CHI TIÊU")
+                                    .foregroundColor(.primary)
+                                +
+                                Text("+")
+                                    .foregroundStyle(gradient)
+                                )
+                                .font(.custom("Bungee-Regular", size: 40))
+                                .padding(.top, 13)
+                                // --- KẾT THÚC THAY ĐỔI ---
+                            }
                         }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
-                    
-                    if filteredTransactions().isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "tray")
-                                .font(.system(size: 50))
-                                .foregroundColor(.secondary)
-                            Text("Chưa có giao dịch")
-                                .foregroundColor(.secondary)
-                                .font(.headline)
+    
+                        Picker("Lọc giao dịch", selection: $selectedFilter.animation(.easeInOut(duration: 0.3))) {
+                            ForEach(FilterType.allCases, id: \.self) { type in
+                                Text(type.rawValue).tag(type)
+                            }
                         }
-                        .frame(maxHeight: .infinity)
-                    } else {
+                        .pickerStyle(.segmented)
+                        .padding(.horizontal)
+                        .padding(.vertical, 15)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(20)
+                        .shadow(color: Color.primary.opacity(0.08), radius: 8, x: 0, y: 4)
+                        .padding(.horizontal)
+                        .padding(.top, 20)
+                        
+                        // --- DANH SÁCH GIAO DỊCH ---
                         ScrollView {
-                            VStack(spacing: 16) {
-                                ForEach(groupedFilteredTransactions(), id: \.date) { group in
-                                    VStack(alignment: .leading, spacing: 8) {
+                            VStack(spacing: 18) {
+                                if filteredTransactions().isEmpty {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "tray")
+                                            .font(.system(size: 60))
+                                            .foregroundColor(.secondary)
+                                        Text("Chưa có giao dịch")
+                                            .foregroundColor(.secondary)
+                                            .font(.title3)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top, 100)
+                                } else {
+                                    ForEach(groupedFilteredTransactions(), id: \.date) { group in
                                         Text(formattedDate(group.date))
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.blue)
-                                            .padding(.leading, 8)
+                                            .font(.callout.weight(.semibold))
+                                            .foregroundColor(.secondary)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.top, 15)
+                                            .padding(.leading, 5)
                                         
                                         ForEach(group.items, id: \.id) { transaction in
                                             NavigationLink {
-                                                // SỬA ĐỔI: Điều hướng đến màn hình chi tiết
-                                                // với TransactionFormViewModel được khởi tạo.
                                                 TransactionDetailScreen(
                                                     viewModel: TransactionFormViewModel(transaction: transaction)
                                                 )
@@ -141,22 +141,18 @@ struct HomeScreen: View {
                             }
                             .padding(.horizontal)
                             .padding(.bottom, 10)
+                            .animation(.easeOut(duration: 0.4), value: filteredTransactions())
                         }
                     }
-                }
-            }
-            .onAppear {
-                // SỬA ĐỔI: Yêu cầu ViewModel lấy dữ liệu
-                viewModel.fetchTransactions()
-            }
+                    .background(Color(.systemGroupedBackground))
+                )
             .navigationBarHidden(true)
         }
     }
     
-    // MARK: - Filtering & Data Formatting (Giữ nguyên logic)
+    // --- CÁC HÀM LOGIC GIỮ NGUYÊN 100% ---
     
     private func filteredTransactions() -> [Transaction] {
-        // SỬA ĐỔI: Lấy dữ liệu từ viewModel
         switch selectedFilter {
         case .all:
             return viewModel.allTransactions
@@ -181,5 +177,22 @@ struct HomeScreen: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - Các Extension (Giữ nguyên)
+extension View {
+    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+        clipShape(RoundedCorner(radius: radius, corners: corners))
+    }
+}
+
+struct RoundedCorner: Shape {
+    var radius: CGFloat = .infinity
+    var corners: UIRectCorner = .allCorners
+    
+    func path(in rect: CGRect) -> Path {
+        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
+        return Path(path.cgPath)
     }
 }

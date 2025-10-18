@@ -40,33 +40,46 @@ struct CustomTabBar: View {
                         
                     } label: {
                         VStack(spacing: 2.0) {
-                            Image(systemName: tab.systemImage)
+                            
+                            let iconImage = Image(systemName: tab.systemImage)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .aspectRatio(isCurrentTab ? 0.4 : 0.6, contentMode: .fit)
-                                .frame(
-                                    width: isCurrentTab ? midSize : 35.0,
-                                    height: isCurrentTab ? midSize : 35.0)
-                                .foregroundStyle(
-                                    isCurrentTab ? .black.opacity(0.8) : .gray
+
+                            if isCurrentTab {
+                                LinearGradient(
+                                    colors: [.red, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
+                                .mask(
+                                    iconImage
+                                        .aspectRatio(0.4, contentMode: .fit)
+                                )
+                                .frame(
+                                    width: midSize,
+                                    height: midSize)
                                 .background {
-                                    if isCurrentTab {
-                                        Circle()
-                                            .fill(.white.gradient)
-                                            .matchedGeometryEffect(id: "CurveAnimation", in: animation)
-                                    }
+                                    Circle()
+                                        .fill(.white.gradient)
+                                        .matchedGeometryEffect(id: "CurveAnimation", in: animation)
                                 }
-                                .offset(y: isCurrentTab ? -(midSize/2) : 0.0)
-                            
-                            if !isCurrentTab {
+                                .offset(y: -(midSize/2))
+                                
+                            } else {
+                                iconImage
+                                    .aspectRatio(0.6, contentMode: .fit)
+                                    .frame(
+                                        width: 35.0,
+                                        height: 35.0)
+                                    .foregroundStyle(.gray)
+                                
                                 Text(tab.rawValue)
                                     .font(.caption)
                                     .fontDesign(.rounded)
+                                    .foregroundStyle(.gray)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .foregroundStyle(isCurrentTab ? .white : .gray)
                         .offset(y: !isCurrentTab ? -8.0 : 0.0)
                     }
                     .buttonStyle(.plain)

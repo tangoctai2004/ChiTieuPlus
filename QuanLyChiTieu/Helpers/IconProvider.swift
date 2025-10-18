@@ -1,10 +1,3 @@
-//
-//  IconProvider.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 17/10/25.
-//
-
 import SwiftUI
 
 struct IconProvider {
@@ -71,7 +64,55 @@ struct IconProvider {
       IconInfo(iconName: "leaf.fill", color: .green),
       IconInfo(iconName: "flame.fill", color: .red),
       IconInfo(iconName: "car.fill", color: .purple),
-      // ... thêm các icon khác nếu bạn muốn
+      IconInfo(iconName: "dollarsign.arrow.circlepath", color: .red),
+      IconInfo(iconName: "arrow.up.right.and.arrow.down.left.rectangle", color: .green),
+      IconInfo(iconName: "figure.stand.line.dotted.figure.stand", color: .pink),
+      IconInfo(iconName: "wallet.pass.fill", color: .brown),
+      IconInfo(iconName: "chart.bar.fill", color: .cyan),
+      IconInfo(iconName: "percent", color: .gray),
+      IconInfo(iconName: "eurosign.circle.fill", color: .blue),
+      IconInfo(iconName: "yensign.circle.fill", color: .red),
+      IconInfo(iconName: "bitcoinsign.circle.fill", color: .orange),
+      IconInfo(iconName: "square.and.arrow.up", color: .red),
+      IconInfo(iconName: "square.and.arrow.down", color: .green),
+      IconInfo(iconName: "arrow.left.and.right.square.fill", color: .blue),
+      IconInfo(iconName: "repeat", color: .cyan),
+      IconInfo(iconName: "calendar", color: .red),
+      IconInfo(iconName: "newspaper.fill", color: .gray),
+      IconInfo(iconName: "tv.fill", color: .indigo),
+      IconInfo(iconName: "tag.fill", color: .mint),
+      IconInfo(iconName: "basket.fill", color: .green),
+      IconInfo(iconName: "fork.knife.circle.fill", color: .orange),
+      IconInfo(iconName: "carrot.fill", color: .orange),
+      IconInfo(iconName: "birthday.cake.fill", color: .pink),
+      IconInfo(iconName: "tram.fill", color: .blue),
+      IconInfo(iconName: "bicycle", color: .green),
+      IconInfo(iconName: "cross.fill", color: .red),
+      IconInfo(iconName: "comb.fill", color: .pink),
+      IconInfo(iconName: "face.smiling.fill", color: .yellow),
+      IconInfo(iconName: "teddybear.fill", color: .brown),
+      IconInfo(iconName: "hammer.fill", color: .gray),
+      IconInfo(iconName: "paintbrush.fill", color: .purple),
+      IconInfo(iconName: "soccerball", color: .black),
+      IconInfo(iconName: "book.fill", color: .brown),
+      IconInfo(iconName: "hand.thumbsup.fill", color: .teal),
+      IconInfo(iconName: "doc.text", color: .gray),
+      IconInfo(iconName: "checkmark.circle.fill", color: .green),
+      IconInfo(iconName: "xmark.circle.fill", color: .red),
+      IconInfo(iconName: "hourglass", color: .orange),
+      IconInfo(iconName: "archivebox.fill", color: .brown),
+      IconInfo(iconName: "slider.horizontal.3", color: .gray),
+      IconInfo(iconName: "gearshape.fill", color: .gray),
+      IconInfo(iconName: "lock.fill", color: .black),
+      IconInfo(iconName: "chart.pie.fill", color: .purple),
+      IconInfo(iconName: "hands.sparkles.fill", color: .yellow),
+      IconInfo(iconName: "shield.lefthalf.filled", color: .blue),
+      IconInfo(iconName: "umbrella.fill", color: .cyan),
+      IconInfo(iconName: "graduationcap.circle.fill", color: .brown),
+      IconInfo(iconName: "building.2.fill", color: .gray),
+      IconInfo(iconName: "sailboat.fill", color: .blue),
+      IconInfo(iconName: "cross.vial.fill", color: .mint),
+      IconInfo(iconName: "creditcard.and.123", color: .purple)
     ]
 
     static func color(for iconName: String?) -> Color {

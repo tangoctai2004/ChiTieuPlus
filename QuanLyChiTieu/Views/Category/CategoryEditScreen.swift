@@ -6,7 +6,6 @@ struct CategoryEditScreen: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    // State của View được giữ nguyên
     @State private var name: String = ""
     @State private var selectedType: String = "expense"
     @State private var selectedIconName: String = ""
@@ -19,7 +18,6 @@ struct CategoryEditScreen: View {
     }
 
     var body: some View {
-        // Toàn bộ giao diện trong body được giữ nguyên 100%
         VStack(spacing: 0) {
             CustomEditHeader(onCancel: { dismiss() })
 
@@ -36,7 +34,7 @@ struct CategoryEditScreen: View {
                         .pickerStyle(.segmented)
                         .padding()
                     }
-                    .background(Color(.systemBackground))
+                    .background(Color(.systemBackground)) // Giữ nguyên
                     .cornerRadius(10)
 
                     VStack(alignment: .leading) {
@@ -57,7 +55,7 @@ struct CategoryEditScreen: View {
                         }
                         .padding()
                     }
-                    .background(Color(.systemBackground))
+                    .background(Color(.systemBackground)) // Giữ nguyên
                     .cornerRadius(10)
                 }
                 .padding()
@@ -77,7 +75,6 @@ struct CategoryEditScreen: View {
                 }
 
                 Button(action: {
-                    // Gọi hàm update của ViewModel
                     viewModel.updateCategory(category, name: name, type: selectedType, iconName: selectedIconName)
                     dismiss()
                 }) {
@@ -93,7 +90,16 @@ struct CategoryEditScreen: View {
                 .opacity(canSave ? 1.0 : 0.6)
             }
             .padding()
-            .background(Color(.systemBackground).shadow(radius: 2, y: -2))
+            .background(
+                Color(.systemGroupedBackground)
+                    .shadow(
+                        color: Color.primary.opacity(0.1),
+                        radius: 2,
+                        x: 0,
+                        y: -2
+                    )
+            )
+            .padding(.bottom, 35)
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarHidden(true)
@@ -104,7 +110,6 @@ struct CategoryEditScreen: View {
         }
         .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
             Button("Chắc chắn xoá", role: .destructive) {
-                // Gọi hàm delete của ViewModel
                 viewModel.deleteCategory(category)
                 dismiss()
             }
@@ -115,7 +120,7 @@ struct CategoryEditScreen: View {
     }
 }
 
-// MARK: - Custom Header View for Edit Screen (Giữ nguyên)
+// MARK: - Custom Header View for Edit Screen
 struct CustomEditHeader: View {
     let onCancel: () -> Void
 
@@ -130,6 +135,6 @@ struct CustomEditHeader: View {
         }
         .padding()
         .frame(height: 44)
-        .background(Color(.systemBackground))
+        .background(Color(.systemBackground)) // Giữ nguyên
     }
 }

@@ -8,7 +8,6 @@ struct TransactionAddScreen: View {
     
     @State private var showSuccessToast = false
 
-    // SỬA ĐỔI: Lấy giá trị canSave trực tiếp từ viewModel
     private var canSave: Bool {
         viewModel.canSave
     }
@@ -22,7 +21,6 @@ struct TransactionAddScreen: View {
                     ScrollView {
                         VStack(spacing: 12) {
                             TransactionFormFields(viewModel: viewModel)
-                            // Sử dụng Grid đã được sửa lỗi
                             CategorySelectionGrid(viewModel: viewModel, categoryVM: categoryVM)
                         }
                         .padding()
@@ -31,10 +29,19 @@ struct TransactionAddScreen: View {
                     Button(action: saveTransaction) {
                         Text(viewModel.type == "expense" ? "Nhập khoản chi" : "Nhập khoản thu")
                     }
-                    .buttonStyle(AnimatedButtonStyle(isEnabled: canSave)) // Truyền giá trị canSave vào style
-                    .disabled(!canSave) // Dùng canSave để vô hiệu hóa nút
+                    .buttonStyle(AnimatedButtonStyle(isEnabled: canSave))
+                    .disabled(!canSave)
                     .padding()
-                    .background(Color.white.shadow(radius: 2, x: 0, y: -2))
+                    .background(
+                        Color(.systemGroupedBackground)
+                            .shadow(
+                                color: Color.primary.opacity(0.1),
+                                radius: 2,
+                                x: 0,
+                                y: -2
+                            )
+                    )
+                    .padding(.bottom, 35)
                 }
                 .background(Color(.systemGroupedBackground))
                 .navigationBarHidden(true)
@@ -68,7 +75,7 @@ struct TransactionAddScreen: View {
     }
 }
 
-// MARK: - Form Fields (Giữ nguyên)
+// MARK: - Form Fields
 struct TransactionFormFields: View {
     @ObservedObject var viewModel: TransactionFormViewModel
     
@@ -109,13 +116,13 @@ struct TransactionFormFields: View {
                 Text("đ").foregroundColor(.secondary)
             }.padding()
         }
-        .background(Color.white)
+        .background(Color(.systemBackground))
         .cornerRadius(10)
     }
 }
 
 
-// Các View phụ khác giữ nguyên 100% giao diện
+// Các View phụ khác
 struct CustomAddHeaderView: View {
     @Binding var selectedType: String
     var body: some View {
@@ -131,7 +138,8 @@ struct CustomAddHeaderView: View {
         }
         .padding(.vertical, 10)
         .frame(height: 44)
-        .background(Color.white)
+        // SỬA ĐỔI: Dùng .systemBackground thay vì .white
+        .background(Color(.systemBackground))
     }
 }
 
@@ -149,12 +157,12 @@ struct CategoryGridButton: View {
                 
                 Text(category.name ?? "N/A")
                     .font(.caption2)
-                    .foregroundColor(isSelected ? IconProvider.color(for: category.iconName) : .secondary)
+                    .foregroundColor(isSelected ? IconProvider.color(for: category.iconName) : .secondary) // .secondary đã hỗ trợ
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
             .frame(width: 80, height: 70)
-            .background(Color(.systemGray6))
+            .background(Color(.systemGray6)) // Giữ nguyên
             .cornerRadius(10)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -175,7 +183,7 @@ struct EditCategoryButton: View {
                 .foregroundColor(.secondary)
         }
         .frame(width: 80, height: 70)
-        .background(Color(.systemGray6))
+        .background(Color(.systemGray6)) // Giữ nguyên
         .cornerRadius(10)
     }
 }
@@ -194,9 +202,10 @@ struct SuccessToastView: View {
                 .foregroundColor(.primary)
         }
         .padding(30)
-        .background(.ultraThinMaterial)
+        .background(.ultraThinMaterial) // Giữ nguyên, đã hỗ trợ
         .cornerRadius(20)
-        .shadow(color: .black.opacity(0.15), radius: 10, y: 5)
+        // SỬA ĐỔI: Dùng .primary.opacity(0.15) cho shadow
+        .shadow(color: Color.primary.opacity(0.15), radius: 10, y: 5)
         .onAppear(perform: playSound)
     }
     
@@ -227,7 +236,7 @@ struct AnimatedButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - Category Grid (ĐÃ SỬA LỖI)
+// MARK: - Category Grid
 struct CategorySelectionGrid: View {
     @ObservedObject var viewModel: TransactionFormViewModel
     @ObservedObject var categoryVM: CategoryViewModel
@@ -242,22 +251,20 @@ struct CategorySelectionGrid: View {
                 ForEach(categoryVM.categories.filter { $0.type == viewModel.type }) { category in
                     CategoryGridButton(
                         category: category,
-                        // Điều kiện isSelected giờ sẽ so sánh ID
                         isSelected: viewModel.selectedCategoryID == category.objectID
                     ) {
-                        // SỬA ĐỔI QUAN TRỌNG: Cập nhật cả hai thuộc tính!
                         viewModel.selectedCategory = category
                         viewModel.selectedCategoryID = category.objectID
                     }
                 }
                 
-                NavigationLink(destination: CategoryListScreen()) {
+                NavigationLink(destination: CategoryListScreen(isPresentingModal: true)) {
                     EditCategoryButton()
                 }
             }
             .padding([.horizontal, .bottom])
         }
-        .background(Color(.systemBackground))
+        .background(Color(.systemBackground)) // Giữ nguyên
         .cornerRadius(10)
     }
 }

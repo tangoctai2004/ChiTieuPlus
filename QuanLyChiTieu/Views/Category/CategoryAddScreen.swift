@@ -4,7 +4,6 @@ struct CategoryAddScreen: View {
     @ObservedObject var viewModel: CategoryViewModel
     @Environment(\.dismiss) private var dismiss
     
-    // State của View được giữ nguyên
     @State private var name: String = ""
     @State private var selectedType: String = "expense"
     @State private var selectedIconName: String = IconProvider.allIcons.first?.iconName ?? "cart.fill"
@@ -16,7 +15,6 @@ struct CategoryAddScreen: View {
     }
     
     var body: some View {
-        // Toàn bộ giao diện trong body được giữ nguyên 100%
         VStack(spacing: 0) {
             CustomAddHeader(onCancel: { dismiss() })
             
@@ -34,7 +32,7 @@ struct CategoryAddScreen: View {
                     .pickerStyle(.segmented)
                     .padding()
                 }
-                .background(Color(.systemBackground))
+                .background(Color(.systemBackground)) // Giữ nguyên, đã hỗ trợ
                 .cornerRadius(10)
                 
                 VStack(alignment: .leading) {
@@ -57,30 +55,38 @@ struct CategoryAddScreen: View {
                         .padding()
                     }
                 }
-                .background(Color(.systemBackground))
+                .background(Color(.systemBackground)) // Giữ nguyên, đã hỗ trợ
                 .cornerRadius(10)
             }
             .padding()
             .frame(maxHeight: .infinity, alignment: .top)
             
-            // Nút Save gọi đúng hàm của ViewModel
             Button(action: {
                 viewModel.addCategory(name: name, type: selectedType, iconName: selectedIconName)
                 dismiss()
             }) {
                 Text("Lưu danh mục")
             }
-            .buttonStyle(AnimatedButtonStyle(isEnabled: canSave)) // AnimatedButtonStyle cần được định nghĩa ở đâu đó
+            .buttonStyle(AnimatedButtonStyle(isEnabled: canSave))
             .disabled(!canSave)
             .padding()
-            .background(Color.white.shadow(radius: 2, y: -2))
+            .background(
+                Color(.systemGroupedBackground)
+                    .shadow(
+                        color: Color.primary.opacity(0.1),
+                        radius: 2,
+                        x: 0,
+                        y: -2
+                    )
+            )
+            .padding(.bottom, 35)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground)) // Giữ nguyên, đã hỗ trợ
         .navigationBarHidden(true)
     }
 }
 
-// MARK: - Custom Header View for Add Screen (Giữ nguyên)
+// MARK: - Custom Header View for Add Screen
 struct CustomAddHeader: View {
     let onCancel: () -> Void
     
@@ -95,11 +101,11 @@ struct CustomAddHeader: View {
         }
         .padding()
         .frame(height: 44)
-        .background(Color(.systemBackground))
+        .background(Color(.systemBackground)) // Giữ nguyên, đã hỗ trợ
     }
 }
 
-// MARK: - Icon View (Giữ nguyên)
+// MARK: - Icon View
 struct IconView: View {
     let iconInfo: IconProvider.IconInfo
     let isSelected: Bool
@@ -110,7 +116,7 @@ struct IconView: View {
             .foregroundColor(iconInfo.color)
             .frame(width: 50, height: 50)
             .background(
-                isSelected ? iconInfo.color.opacity(0.25) : Color(.systemGray6)
+                isSelected ? iconInfo.color.opacity(0.25) : Color(.systemGray6) // systemGray6 đã hỗ trợ
             )
             .cornerRadius(8)
             .overlay(
@@ -119,4 +125,3 @@ struct IconView: View {
             )
     }
 }
-

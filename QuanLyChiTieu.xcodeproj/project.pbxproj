@@ -24,14 +24,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		45C638AD2E5EBB67008C81B9 /* QuanLyChiTieu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuanLyChiTieu.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		45C638BF2E5EBB6A008C81B9 /* QuanLyChiTieuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuanLyChiTieuTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		45B8085C2EA3949200304184 /* QuanLyChiTieu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuanLyChiTieu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		45C638BF2E5EBB6A008C81B9 /* QuanLyChiTieuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = QuanLyChiTieuTests.xctest; path = "/Users/tnteheh/Workspace/Swift/ChiTieuPlus/build/Debug-iphoneos/QuanLyChiTieu.app/PlugIns/QuanLyChiTieuTests.xctest"; sourceTree = "<absolute>"; };
 		45C638C92E5EBB6A008C81B9 /* QuanLyChiTieuUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QuanLyChiTieuUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		45B8085E2EA3949800304184 /* Exceptions for "QuanLyChiTieu" folder in "QuanLyChiTieu" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 45C638AC2E5EBB67008C81B9 /* QuanLyChiTieu */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		45C638AF2E5EBB67008C81B9 /* QuanLyChiTieu */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				45B8085E2EA3949800304184 /* Exceptions for "QuanLyChiTieu" folder in "QuanLyChiTieu" target */,
+			);
 			path = QuanLyChiTieu;
 			sourceTree = "<group>";
 		};
@@ -72,6 +85,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		45B808592EA3942D00304184 /* New Group */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "New Group";
+			sourceTree = "<group>";
+		};
 		45C638A42E5EBB67008C81B9 = {
 			isa = PBXGroup;
 			children = (
@@ -85,9 +105,9 @@
 		45C638AE2E5EBB67008C81B9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				45C638AD2E5EBB67008C81B9 /* QuanLyChiTieu.app */,
-				45C638BF2E5EBB6A008C81B9 /* QuanLyChiTieuTests.xctest */,
 				45C638C92E5EBB6A008C81B9 /* QuanLyChiTieuUITests.xctest */,
+				45B808592EA3942D00304184 /* New Group */,
+				45B8085C2EA3949200304184 /* QuanLyChiTieu.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,7 +134,7 @@
 			packageProductDependencies = (
 			);
 			productName = QuanLyChiTieu;
-			productReference = 45C638AD2E5EBB67008C81B9 /* QuanLyChiTieu.app */;
+			productReference = 45B8085C2EA3949200304184 /* QuanLyChiTieu.app */;
 			productType = "com.apple.product-type.application";
 		};
 		45C638BE2E5EBB6A008C81B9 /* QuanLyChiTieuTests */ = {
@@ -398,6 +418,7 @@
 				DEVELOPMENT_TEAM = H74UZCK76R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuanLyChiTieu/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -427,6 +448,7 @@
 				DEVELOPMENT_TEAM = H74UZCK76R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = QuanLyChiTieu/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

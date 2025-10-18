@@ -1,10 +1,3 @@
-//
-//  CategoryViewModel.swift
-//  QuanLyChiTieu
-//
-//  Updated by Tạ Ngọc Tài on 17/10/25.
-//
-
 import Foundation
 import Combine
 import CoreData
@@ -15,19 +8,22 @@ class CategoryViewModel: ObservableObject {
     private let repository: DataRepository
     private var cancellables = Set<AnyCancellable>()
     
-    // ViewModel giờ phụ thuộc vào Repository, không phải context
     init(repository: DataRepository = .shared) {
         self.repository = repository
         
-        // Lắng nghe sự thay đổi từ publisher của repository
+        // --- SỬA LỖI TỪ .assign SANG .sink ---
         repository.categoriesPublisher
-            .receive(on: DispatchQueue.main) // Đảm bảo cập nhật UI trên main thread
-            .assign(to: \.categories, on: self)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] updatedCategories in
+                // Gán giá trị thủ công để đảm bảo @Published được kích hoạt
+                self?.categories = updatedCategories
+            }
             .store(in: &cancellables)
+        // --- HẾT SỬA LỖI ---
     }
     
     func fetchAllCategories() {
-        repository.fetchCategories() // Yêu cầu repository fetch dữ liệu
+        repository.fetchCategories()
     }
     
     func addCategory(name: String, type: String, iconName: String) {

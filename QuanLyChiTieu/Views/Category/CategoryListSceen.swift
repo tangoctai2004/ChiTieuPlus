@@ -3,38 +3,31 @@ import CoreData
 
 // MARK: - Main View
 struct CategoryListScreen: View {
-    // SỬA ĐỔI: ViewModel được khởi tạo trực tiếp, không cần context
+    var isPresentingModal: Bool = false
+    
     @StateObject private var viewModel = CategoryViewModel()
     
-    // Các state điều khiển UI được giữ nguyên
     @State private var selectedType = "expense"
     @State private var isEditing = false
     @State private var showingDeleteConfirmation = false
     @State private var showSuccessAlert = false
     @State private var categoryToDelete: Category? = nil
     
-    // Bỏ init cũ, không cần `isPushed` nữa vì NavigationStack sẽ tự xử lý
-    
     private var filteredCategories: [Category] {
-        // SỬA ĐỔI: Lấy dữ liệu từ viewModel
         viewModel.categories.filter { $0.type == selectedType }
     }
     
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // CustomHeaderView được giữ nguyên 100%
                 CustomHeaderView(
                     selectedType: $selectedType,
                     isEditing: $isEditing,
-                    // Giả định isPushed không còn cần thiết
-                    // Nếu bạn cần logic back đặc biệt, có thể thêm lại
-                    isPushed: false
+                    isPushed: isPresentingModal
                 )
                 
                 ScrollView {
                     VStack(spacing: 8) {
-                        // NavigationLink để thêm Category (Giữ nguyên)
                         NavigationLink(destination: CategoryAddScreen(viewModel: viewModel)) {
                             HStack(spacing: 12) {
                                 Spacer().frame(width: isEditing ? 57 : 24)
@@ -44,15 +37,16 @@ struct CategoryListScreen: View {
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.footnote)
-                                    .foregroundColor(.gray.opacity(0.5))
+                                    // SỬA ĐỔI: Dùng .secondary thay vì .gray
+                                    .foregroundColor(.secondary.opacity(0.5))
                             }
                             .padding(.vertical, 14)
                             .padding(.horizontal)
-                            .background(Color.white)
+                            // SỬA ĐỔI: Dùng .systemBackground thay vì .white
+                            .background(Color(.systemBackground))
                             .cornerRadius(10)
                         }
                         
-                        // Categories List (Giữ nguyên)
                         ForEach(filteredCategories) { category in
                             Group {
                                 if isEditing {
@@ -85,7 +79,7 @@ struct CategoryListScreen: View {
                     .padding()
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.systemGroupedBackground)) // Giữ nguyên, đã hỗ trợ
             .navigationBarHidden(true)
             .animation(.default, value: isEditing)
             .animation(.default, value: filteredCategories)
@@ -101,7 +95,6 @@ struct CategoryListScreen: View {
                 Button("OK", role: .cancel) { }
             }
             .onAppear {
-                // SỬA ĐỔI: Yêu cầu ViewModel lấy dữ liệu
                 viewModel.fetchAllCategories()
             }
         }
@@ -109,7 +102,6 @@ struct CategoryListScreen: View {
     
     private func deleteConfirmed() {
         if let category = categoryToDelete {
-            // SỬA ĐỔI: Gọi hàm xóa của ViewModel
             viewModel.deleteCategory(category)
             self.categoryToDelete = nil
             self.showSuccessAlert = true
@@ -117,7 +109,7 @@ struct CategoryListScreen: View {
     }
 }
 
-// MARK: - Các View phụ (Giữ nguyên 100%)
+// MARK: - Các View phụ
 
 struct CustomHeaderView: View {
     @Binding var selectedType: String
@@ -132,6 +124,7 @@ struct CustomHeaderView: View {
                 Button(action: { dismiss() }) {
                     Image(systemName: "chevron.left")
                         .font(.title3.weight(.medium))
+                        .foregroundColor(.primary)
                 }
                 .frame(width: 80, alignment: .leading)
             } else {
@@ -155,7 +148,8 @@ struct CustomHeaderView: View {
         }
         .padding(.horizontal)
         .frame(height: 44)
-        .background(Color.white)
+        // SỬA ĐỔI: Dùng .systemBackground thay vì .white
+        .background(Color(.systemBackground))
     }
 }
 
@@ -189,16 +183,19 @@ struct EditableCategoryRow: View {
             
             if isEditing {
                 Image(systemName: "line.horizontal.3")
-                    .foregroundColor(.gray.opacity(0.7))
+                    // SỬA ĐỔI: Dùng .secondary thay vì .gray
+                    .foregroundColor(.secondary.opacity(0.7))
             } else {
                 Image(systemName: "chevron.right")
                     .font(.footnote)
-                    .foregroundColor(.gray.opacity(0.5))
+                    // SỬA ĐỔI: Dùng .secondary thay vì .gray
+                    .foregroundColor(.secondary.opacity(0.5))
             }
         }
         .padding(.vertical, 14)
         .padding(.horizontal)
-        .background(Color.white)
+        // SỬA ĐỔI: Dùng .systemBackground thay vì .white
+        .background(Color(.systemBackground))
         .cornerRadius(10)
     }
 }

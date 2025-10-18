@@ -1,10 +1,3 @@
-//
-//  TransactionViewModel.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 17/10/25.
-//
-
 import Foundation
 import Combine
 import CoreData
@@ -18,10 +11,17 @@ class TransactionViewModel: ObservableObject {
     init(repository: DataRepository = .shared) {
         self.repository = repository
         
+        // --- SỬA LỖI TỪ .assign SANG .sink ---
         repository.transactionsPublisher
             .receive(on: DispatchQueue.main)
-            .assign(to: \.allTransactions, on: self)
+            .sink { [weak self] updatedTransactions in
+                // Gán giá trị thủ công để đảm bảo @Published được kích hoạt
+                self?.allTransactions = updatedTransactions
+            }
             .store(in: &cancellables)
+        // --- HẾT SỬA LỖI ---
+            
+        repository.fetchTransactions()
     }
     
     func fetchTransactions() {

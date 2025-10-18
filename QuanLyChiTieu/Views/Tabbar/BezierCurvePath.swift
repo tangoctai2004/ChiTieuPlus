@@ -1,10 +1,3 @@
-//
-//  BezierCurvePath.swift
-//  TabBarAnimation
-//
-//  Created by Thanh Hoang on 17/2/25.
-//
-
 import SwiftUI
 
 struct BezierCurvePath: Shape {
