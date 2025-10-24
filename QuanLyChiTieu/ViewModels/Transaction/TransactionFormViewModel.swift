@@ -9,7 +9,6 @@ import Foundation
 import CoreData
 
 class TransactionFormViewModel: ObservableObject {
-    // Các thuộc tính của form
     @Published var transactionTitle: String = ""
     @Published var note: String = ""
     @Published var rawAmount: String = ""
@@ -19,7 +18,7 @@ class TransactionFormViewModel: ObservableObject {
         didSet {
             if oldValue != type {
                 selectedCategory = nil
-                selectedCategoryID = nil 
+                selectedCategoryID = nil
             }
         }
     }
@@ -35,7 +34,6 @@ class TransactionFormViewModel: ObservableObject {
     }
     
     var canSave: Bool {
-        // SỬA ĐỔI: Dùng ID để kiểm tra điều kiện save
         AppUtils.currencyToDouble(rawAmount) > 0 && selectedCategoryID != nil
     }
     
@@ -43,13 +41,16 @@ class TransactionFormViewModel: ObservableObject {
         self.repository = repository
         self.transactionToEdit = transaction
         
-        if let transaction = transaction {
+        reinitializeFromTransaction()
+    }
+    
+    func reinitializeFromTransaction() {
+        if let transaction = transactionToEdit {
             self.transactionTitle = transaction.title ?? ""
             self.note = transaction.note ?? ""
             self.date = transaction.date ?? Date()
             self.type = transaction.type ?? "expense"
             
-            // SỬA ĐỔI: Khởi tạo cả category và categoryID
             self.selectedCategory = transaction.category
             self.selectedCategoryID = transaction.category?.objectID
             
@@ -60,14 +61,13 @@ class TransactionFormViewModel: ObservableObject {
     }
     
     func save() {
-        // SỬA ĐỔI: Truyền ID vào formData
         let formData = TransactionFormData(
             transactionTitle: transactionTitle,
             note: note,
             rawAmount: rawAmount,
             date: date,
             type: type,
-            selectedCategoryID: selectedCategoryID // Truyền ID thay vì object
+            selectedCategoryID: selectedCategoryID
         )
         
         if let transaction = transactionToEdit {
@@ -90,6 +90,6 @@ class TransactionFormViewModel: ObservableObject {
         formattedAmount = ""
         date = Date()
         selectedCategory = nil
-        selectedCategoryID = nil // SỬA ĐỔI: Reset cả ID
+        selectedCategoryID = nil
     }
 }

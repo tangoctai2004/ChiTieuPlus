@@ -13,8 +13,8 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>
-		<key>UIColorName</key>
-		<string>black</string>
+		<key>UIImageName</key>
+		<string>backgroundblack</string>
 	</dict>
 </dict>
 </plist>

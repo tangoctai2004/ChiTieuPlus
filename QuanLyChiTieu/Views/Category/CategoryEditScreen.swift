@@ -2,10 +2,11 @@ import SwiftUI
 
 struct CategoryEditScreen: View {
     @ObservedObject var viewModel: CategoryViewModel
-    let category: Category
+    let category: Category // Giữ nguyên category gốc để sửa
 
     @Environment(\.dismiss) private var dismiss
 
+    // State cho form
     @State private var name: String = ""
     @State private var selectedType: String = "expense"
     @State private var selectedIconName: String = ""
@@ -19,44 +20,37 @@ struct CategoryEditScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            CustomEditHeader(onCancel: { dismiss() })
+            CustomEditHeader(onCancel: { dismiss() }) // Header cũ cho nút Huỷ
 
             ScrollView {
                 VStack(spacing: 15) {
+                    // Khối Tên & Loại
                     VStack {
-                        TextField("Tên danh mục", text: $name)
-                            .padding()
+                        TextField("Tên danh mục", text: $name).padding()
                         Divider()
                         Picker("Loại", selection: $selectedType) {
                             Text("Chi tiêu").tag("expense")
                             Text("Thu nhập").tag("income")
-                        }
-                        .pickerStyle(.segmented)
-                        .padding()
+                        }.pickerStyle(.segmented).padding()
                     }
-                    .background(Color(.systemBackground)) // Giữ nguyên
-                    .cornerRadius(10)
+                    .formSectionStyle()
 
                     VStack(alignment: .leading) {
-                        Text("Biểu tượng")
-                            .font(.headline)
-                            .padding([.top, .horizontal])
-
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 15) {
-                            ForEach(iconList) { iconInfo in
-                                IconView(
-                                    iconInfo: iconInfo,
-                                    isSelected: selectedIconName == iconInfo.iconName
-                                )
-                                .onTapGesture {
-                                    selectedIconName = iconInfo.iconName
+                        Text("Biểu tượng").font(.headline).padding([.top, .horizontal])
+                        ScrollView {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 15) {
+                                ForEach(iconList) { iconInfo in
+                                    IconView(
+                                        iconInfo: iconInfo,
+                                        isSelected: selectedIconName == iconInfo.iconName
+                                    )
+                                    .onTapGesture { selectedIconName = iconInfo.iconName }
                                 }
                             }
+                            .padding()
                         }
-                        .padding()
                     }
-                    .background(Color(.systemBackground)) // Giữ nguyên
-                    .cornerRadius(10)
+                    .formSectionStyle()
                 }
                 .padding()
             }
@@ -66,68 +60,51 @@ struct CategoryEditScreen: View {
                     showingDeleteConfirmation = true
                 } label: {
                     Text("Xoá")
-                        .font(.headline.weight(.semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.red)
-                        .cornerRadius(25)
                 }
+                .buttonStyle(DestructiveActionButtonStyle())
 
-                Button(action: {
-                    viewModel.updateCategory(category, name: name, type: selectedType, iconName: selectedIconName)
-                    dismiss()
-                }) {
+                Button(action: updateCategoryAction) {
                     Text("Cập nhật")
-                        .font(.headline.weight(.semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.gray)
-                        .cornerRadius(25)
                 }
+                .buttonStyle(PrimaryActionButtonStyle(isEnabled: canSave))
                 .disabled(!canSave)
-                .opacity(canSave ? 1.0 : 0.6)
             }
-            .padding()
-            .background(
-                Color(.systemGroupedBackground)
-                    .shadow(
-                        color: Color.primary.opacity(0.1),
-                        radius: 2,
-                        x: 0,
-                        y: -2
-                    )
-            )
-            .padding(.bottom, 35)
+            .bottomActionBar()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarHidden(true)
         .onAppear {
             self.name = category.name ?? ""
             self.selectedType = category.type ?? "expense"
-            self.selectedIconName = category.iconName ?? ""
+            self.selectedIconName = category.iconName ?? IconProvider.allIcons.first?.iconName ?? ""
         }
         .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
-            Button("Chắc chắn xoá", role: .destructive) {
-                viewModel.deleteCategory(category)
-                dismiss()
-            }
+            Button("Chắc chắn xoá", role: .destructive) { deleteCategoryAction() }
             Button("Không", role: .cancel) { }
         } message: {
             Text("Bạn có chắc chắn muốn xoá danh mục \"\(name)\" không?")
         }
+        .addSwipeBackGesture()
+    }
+    
+    private func updateCategoryAction() {
+         viewModel.updateCategory(category, name: name, type: selectedType, iconName: selectedIconName)
+         dismiss()
+    }
+    
+    private func deleteCategoryAction() {
+         viewModel.deleteCategory(category)
+         dismiss()
     }
 }
 
-// MARK: - Custom Header View for Edit Screen
 struct CustomEditHeader: View {
     let onCancel: () -> Void
-
     var body: some View {
         HStack {
             Button("Huỷ") { onCancel() }
                 .frame(width: 80, alignment: .leading)
+                .foregroundColor(.primary)
             Spacer()
             Text("Chỉnh sửa danh mục").font(.headline)
             Spacer()
@@ -135,6 +112,6 @@ struct CustomEditHeader: View {
         }
         .padding()
         .frame(height: 44)
-        .background(Color(.systemBackground)) // Giữ nguyên
+        .background(Color(.systemBackground))
     }
 }

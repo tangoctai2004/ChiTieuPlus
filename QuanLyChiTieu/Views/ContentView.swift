@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreData
 
-// MARK: - ContentView (ĐÃ KHÔI PHỤC LOGIC GỐC)
+// MARK: - ContentView
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var context
     
@@ -10,7 +10,6 @@ struct ContentView: View {
     
     @StateObject private var transactionFormViewModel = TransactionFormViewModel()
     
-//     Ẩn tab bar gốc của hệ thống
     init() {
         UITabBar.appearance().isHidden = true
     }
@@ -31,10 +30,10 @@ struct ContentView: View {
                     TransactionAddScreen()
                         .padding(.bottom, tabBarHeight)
                 case 4:
-                    Text("Thống kê Screen (Chưa link)")
+                    DashboardScreen()
                         .padding(.bottom, tabBarHeight)
                 case 5:
-                    Text("Cài đặt Screen (Chưa link)")
+                    SettingScreen()
                         .padding(.bottom, tabBarHeight)
                 default:
                     HomeScreen()

@@ -3,7 +3,6 @@ import SwiftUI
 struct CategoryAddScreen: View {
     @ObservedObject var viewModel: CategoryViewModel
     @Environment(\.dismiss) private var dismiss
-    
     @State private var name: String = ""
     @State private var selectedType: String = "expense"
     @State private var selectedIconName: String = IconProvider.allIcons.first?.iconName ?? "cart.fill"
@@ -20,26 +19,17 @@ struct CategoryAddScreen: View {
             
             VStack(spacing: 15) {
                 VStack {
-                    TextField("Tên danh mục", text: $name)
-                        .padding()
-                    
+                    TextField("Tên danh mục", text: $name).padding()
                     Divider()
-                    
                     Picker("Loại", selection: $selectedType) {
                         Text("Chi tiêu").tag("expense")
                         Text("Thu nhập").tag("income")
-                    }
-                    .pickerStyle(.segmented)
-                    .padding()
+                    }.pickerStyle(.segmented).padding()
                 }
-                .background(Color(.systemBackground)) // Giữ nguyên, đã hỗ trợ
-                .cornerRadius(10)
-                
+                .formSectionStyle()
+
                 VStack(alignment: .leading) {
-                    Text("Biểu tượng")
-                        .font(.headline)
-                        .padding([.top, .horizontal])
-                    
+                    Text("Biểu tượng").font(.headline).padding([.top, .horizontal])
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 15) {
                             ForEach(iconList) { iconInfo in
@@ -47,42 +37,32 @@ struct CategoryAddScreen: View {
                                     iconInfo: iconInfo,
                                     isSelected: selectedIconName == iconInfo.iconName
                                 )
-                                .onTapGesture {
-                                    selectedIconName = iconInfo.iconName
-                                }
+                                .onTapGesture { selectedIconName = iconInfo.iconName }
                             }
                         }
                         .padding()
                     }
                 }
-                .background(Color(.systemBackground)) // Giữ nguyên, đã hỗ trợ
-                .cornerRadius(10)
+                .formSectionStyle()
+                Spacer()
             }
             .padding()
             .frame(maxHeight: .infinity, alignment: .top)
-            
-            Button(action: {
-                viewModel.addCategory(name: name, type: selectedType, iconName: selectedIconName)
-                dismiss()
-            }) {
+            Button(action: saveCategoryAction) {
                 Text("Lưu danh mục")
             }
-            .buttonStyle(AnimatedButtonStyle(isEnabled: canSave))
+            .buttonStyle(PrimaryActionButtonStyle(isEnabled: canSave))
             .disabled(!canSave)
-            .padding()
-            .background(
-                Color(.systemGroupedBackground)
-                    .shadow(
-                        color: Color.primary.opacity(0.1),
-                        radius: 2,
-                        x: 0,
-                        y: -2
-                    )
-            )
-            .padding(.bottom, 35)
+            .bottomActionBar()
         }
-        .background(Color(.systemGroupedBackground)) // Giữ nguyên, đã hỗ trợ
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationBarHidden(true)
+        .addSwipeBackGesture()
+    }
+    
+    private func saveCategoryAction() {
+         viewModel.addCategory(name: name, type: selectedType, iconName: selectedIconName)
+         dismiss()
     }
 }
 
@@ -94,6 +74,7 @@ struct CustomAddHeader: View {
         HStack {
             Button("Huỷ") { onCancel() }
                 .frame(width: 80, alignment: .leading)
+                .foregroundColor(.primary)
             Spacer()
             Text("Thêm danh mục").font(.headline)
             Spacer()

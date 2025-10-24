@@ -42,7 +42,6 @@ struct CategoryListScreen: View {
                             }
                             .padding(.vertical, 14)
                             .padding(.horizontal)
-                            // SỬA ĐỔI: Dùng .systemBackground thay vì .white
                             .background(Color(.systemBackground))
                             .cornerRadius(10)
                         }
@@ -79,7 +78,7 @@ struct CategoryListScreen: View {
                     .padding()
                 }
             }
-            .background(Color(.systemGroupedBackground)) // Giữ nguyên, đã hỗ trợ
+            .background(Color(.systemGroupedBackground))
             .navigationBarHidden(true)
             .animation(.default, value: isEditing)
             .animation(.default, value: filteredCategories)
@@ -110,7 +109,6 @@ struct CategoryListScreen: View {
 }
 
 // MARK: - Các View phụ
-
 struct CustomHeaderView: View {
     @Binding var selectedType: String
     @Binding var isEditing: Bool

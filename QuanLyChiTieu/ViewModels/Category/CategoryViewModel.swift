@@ -11,15 +11,12 @@ class CategoryViewModel: ObservableObject {
     init(repository: DataRepository = .shared) {
         self.repository = repository
         
-        // --- SỬA LỖI TỪ .assign SANG .sink ---
         repository.categoriesPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] updatedCategories in
-                // Gán giá trị thủ công để đảm bảo @Published được kích hoạt
                 self?.categories = updatedCategories
             }
             .store(in: &cancellables)
-        // --- HẾT SỬA LỖI ---
     }
     
     func fetchAllCategories() {
