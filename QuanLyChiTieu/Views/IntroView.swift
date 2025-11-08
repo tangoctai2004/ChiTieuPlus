@@ -30,7 +30,7 @@ struct IntroView: View {
                     .frame(width: 150, height: 150)
                 
                 // 3. SAO CHÉP KHỐI TEXT TỪ HOMESCREEN
-                (Text("CHI TIÊU")
+                (Text("common_expense")
                     // Đặt màu .white cho rõ ràng trên nền đen
                     .foregroundColor(.white)
                 +

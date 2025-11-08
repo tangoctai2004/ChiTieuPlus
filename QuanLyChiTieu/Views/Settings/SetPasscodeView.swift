@@ -1,3 +1,11 @@
+//
+//  SetPasscodeView.swift
+//  QuanLyChiTieu
+//
+//  Created by Tạ Ngọc Tài on 7/11/25.
+//
+
+
 import SwiftUI
 import Combine
 

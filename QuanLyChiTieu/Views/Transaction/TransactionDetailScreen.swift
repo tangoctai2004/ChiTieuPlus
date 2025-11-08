@@ -30,12 +30,12 @@ struct TransactionDetailScreen: View {
                 Button(role: .destructive) {
                     showingDeleteConfirmation = true
                 } label: {
-                    Text("Xoá")
+                    Text("common_delete")
                 }
                 .buttonStyle(DestructiveActionButtonStyle())
                 
                 Button(action: updateTransaction) {
-                    Text("Lưu chỉnh sửa")
+                    Text("common_save_changes")
                 }
                 .buttonStyle(PrimaryActionButtonStyle(isEnabled: viewModel.canSave))
                 .disabled(!viewModel.canSave)
@@ -49,11 +49,13 @@ struct TransactionDetailScreen: View {
             viewModel.reinitializeFromTransaction()
             categoryVM.fetchAllCategories()
         }
-        .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
-            Button("Chắc chắn xoá", role: .destructive) { delete() }
-            Button("Không", role: .cancel) {}
+        // --- SỬA ĐỔI ---
+        .alert(Text("alert_delete_confirmation_title"), isPresented: $showingDeleteConfirmation) {
+            Button("alert_button_confirm_delete", role: .destructive) { delete() } // Bỏ Text()
+            Button("alert_button_cancel", role: .cancel) {} // Bỏ Text()
         } message: {
-            Text("Bạn có chắc chắn muốn xoá giao dịch này không?")
+        // --- KẾT THÚC SỬA ĐỔI ---
+            Text("alert_delete_transaction_message")
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -67,8 +69,8 @@ struct TransactionDetailScreen: View {
             }
             ToolbarItemGroup(placement: .principal) {
                 Picker("", selection: $viewModel.type) {
-                    Text("Tiền chi").tag("expense")
-                    Text("Tiền thu").tag("income")
+                    Text("common_expense").tag("expense")
+                    Text("common_income").tag("income")
                 }
                 .pickerStyle(.segmented).frame(width: 180)
             }

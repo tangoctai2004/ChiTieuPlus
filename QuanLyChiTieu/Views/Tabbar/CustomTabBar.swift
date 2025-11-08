@@ -73,7 +73,7 @@ struct CustomTabBar: View {
                                         height: 35.0)
                                     .foregroundStyle(.gray)
                                 
-                                Text(tab.rawValue)
+                                Text(tab.localizedName)
                                     .font(.caption)
                                     .fontDesign(.rounded)
                                     .foregroundStyle(.gray)

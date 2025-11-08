@@ -31,13 +31,12 @@ struct CategoryListScreen: View {
                         NavigationLink(destination: CategoryAddScreen(viewModel: viewModel)) {
                             HStack(spacing: 12) {
                                 Spacer().frame(width: isEditing ? 57 : 24)
-                                Text("Thêm danh mục")
+                                Text("category_list_add")
                                     .font(.callout)
                                     .foregroundColor(.primary)
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.footnote)
-                                    // SỬA ĐỔI: Dùng .secondary thay vì .gray
                                     .foregroundColor(.secondary.opacity(0.5))
                             }
                             .padding(.vertical, 14)
@@ -69,7 +68,7 @@ struct CategoryListScreen: View {
                                         self.categoryToDelete = category
                                         self.showingDeleteConfirmation = true
                                     } label: {
-                                        Label("Xoá", systemImage: "trash.fill")
+                                        Label("common_delete", systemImage: "trash.fill")
                                     }
                                 }
                             }
@@ -82,17 +81,19 @@ struct CategoryListScreen: View {
             .navigationBarHidden(true)
             .animation(.default, value: isEditing)
             .animation(.default, value: filteredCategories)
-            .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
-                Button("Chắc chắn xoá", role: .destructive) {
+            // --- SỬA ĐỔI ---
+            .alert(Text("alert_delete_confirmation_title"), isPresented: $showingDeleteConfirmation) {
+                Button("alert_button_confirm_delete", role: .destructive) { // Bỏ Text()
                     deleteConfirmed()
                 }
-                Button("Không", role: .cancel) { }
+                Button("alert_button_cancel", role: .cancel) { } // Bỏ Text()
             } message: {
-                Text("Bạn có chắc chắn muốn xoá danh mục \"\(categoryToDelete?.name ?? "")\" không? Hành động này không thể hoàn tác.")
+                Text(String.localizedStringWithFormat(NSLocalizedString("alert_delete_category_message", comment: ""), categoryToDelete?.name ?? ""))
             }
-            .alert("Xoá thành công", isPresented: $showSuccessAlert) {
-                Button("OK", role: .cancel) { }
+            .alert(Text("alert_delete_success_title"), isPresented: $showSuccessAlert) {
+                Button("alert_button_ok", role: .cancel) { } // Bỏ Text()
             }
+            // --- KẾT THÚC SỬA ĐỔI ---
             .onAppear {
                 viewModel.fetchAllCategories()
             }
@@ -131,22 +132,25 @@ struct CustomHeaderView: View {
             
             Spacer()
             Picker("", selection: $selectedType) {
-                Text("Chi tiêu").tag("expense")
-                Text("Thu nhập").tag("income")
+                Text("common_expense").tag("expense")
+                Text("common_income").tag("income")
             }
             .pickerStyle(.segmented)
             .frame(width: 150)
             Spacer()
-            Button(isEditing ? "Hoàn thành" : "Chỉnh sửa") {
+            // --- SỬA ĐỔI ---
+            Button(action: { // Đổi cú pháp Button
                 isEditing.toggle()
+            }) {
+                isEditing ? Text("common_done") : Text("common_edit")
             }
+            // --- KẾT THÚC SỬA ĐỔI ---
             .font(.callout)
             .foregroundColor(.primary)
             .frame(width: 80, alignment: .trailing)
         }
         .padding(.horizontal)
         .frame(height: 44)
-        // SỬA ĐỔI: Dùng .systemBackground thay vì .white
         .background(Color(.systemBackground))
     }
 }
@@ -173,7 +177,7 @@ struct EditableCategoryRow: View {
                 .foregroundColor(IconProvider.color(for: category.iconName))
                 .frame(width: 24)
             
-            Text(category.name ?? "Không có tên")
+            Text(LocalizedStringKey(category.name ?? "common_no_name"))
                 .font(.callout)
                 .foregroundColor(.primary)
             
@@ -181,18 +185,15 @@ struct EditableCategoryRow: View {
             
             if isEditing {
                 Image(systemName: "line.horizontal.3")
-                    // SỬA ĐỔI: Dùng .secondary thay vì .gray
                     .foregroundColor(.secondary.opacity(0.7))
             } else {
                 Image(systemName: "chevron.right")
                     .font(.footnote)
-                    // SỬA ĐỔI: Dùng .secondary thay vì .gray
                     .foregroundColor(.secondary.opacity(0.5))
             }
         }
         .padding(.vertical, 14)
         .padding(.horizontal)
-        // SỬA ĐỔI: Dùng .systemBackground thay vì .white
         .background(Color(.systemBackground))
         .cornerRadius(10)
     }

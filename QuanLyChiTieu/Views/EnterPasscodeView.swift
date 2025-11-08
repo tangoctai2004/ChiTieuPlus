@@ -1,3 +1,4 @@
+
 import SwiftUI
 import Combine
 
@@ -7,6 +8,10 @@ struct EnterPasscodeView: View {
     @State private var savedPin: String? = nil
     @State private var errorMessage: String = "Nhập mã PIN để mở khóa"
     @State private var attempts: Int = 0
+    
+    // --- THÊM MỚI ---
+    @State private var isShowingResetAlert = false // 1. State cho Alert
+    // --- KẾT THÚC THÊM MỚI ---
     
     // Biến này sẽ được truyền từ LocalAuthManager
     @ObservedObject var authManager: LocalAuthManager
@@ -43,11 +48,14 @@ struct EnterPasscodeView: View {
                 
                 Spacer()
                 
+                // --- SỬA ĐỔI NÚT NÀY ---
                 // Nút "Quên mã PIN"
                 Button("Quên mã PIN?") {
-                    // (Bạn có thể thêm logic reset ở đây sau)
+                    // 2. Hiển thị Alert khi nhấn
+                    self.isShowingResetAlert = true
                 }
                 .padding()
+                // --- KẾT THÚC SỬA ĐỔI ---
             }
             
             // Bàn phím số
@@ -65,6 +73,22 @@ struct EnterPasscodeView: View {
                 checkPin()
             }
         }
+        // --- THÊM MỚI ALERT ---
+        // 3. Thêm Alert
+        .alert(
+            "Bạn có chắc chắn muốn reset?",
+            isPresented: $isShowingResetAlert
+        ) {
+            Button("Hủy", role: .cancel) { }
+            
+            Button("Reset dữ liệu", role: .destructive) {
+                // Hành động Reset
+                performFullReset()
+            }
+        } message: {
+            Text("Toàn bộ dữ liệu giao dịch và cài đặt (bao gồm mã PIN này) sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.")
+        }
+        // --- KẾT THÚC THÊM MỚI ---
     }
     
     private func loadSavedPin() {
@@ -74,8 +98,9 @@ struct EnterPasscodeView: View {
             self.pinLength = savedPin.count
         } else {
             // Trường hợp lỗi: không có PIN nào được lưu
-            // (Lẽ ra không bao giờ xảy ra)
             self.errorMessage = "Lỗi: Không tìm thấy mã PIN"
+            // Nếu không có PIN, tự động mở khóa
+            authManager.unlockApp()
         }
     }
     
@@ -86,6 +111,7 @@ struct EnterPasscodeView: View {
         } else {
             // SAI PIN!
             self.attempts += 1
+            authManager.handleWrongPasscode() // Báo cho manager biết
             self.errorMessage = "Mã PIN sai. Thử lại."
             
             // Rung
@@ -99,6 +125,23 @@ struct EnterPasscodeView: View {
             }
         }
     }
+    
+    // --- HÀM MỚI ---
+    private func performFullReset() {
+        print("ĐANG THỰC HIỆN RESET TOÀN BỘ...")
+        
+        // 1. Xóa tất cả giao dịch
+        DataRepository.shared.resetAllData()
+        
+        // 2. Xóa mã PIN khỏi Keychain
+        _ = KeychainService.shared.deletePasscode()
+        
+        // 3. Mở khóa ứng dụng
+        authManager.unlockApp()
+        
+        // (AuthManager sẽ tự reset ở lần khởi động sau)
+    }
+    // --- KẾT THÚC HÀM MỚI ---
     
     // --- CÁC VIEW PHỤ ---
     

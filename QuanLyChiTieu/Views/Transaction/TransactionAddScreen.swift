@@ -1,13 +1,11 @@
 import SwiftUI
 import CoreData
-import AVFoundation // Cần cho SuccessToastView
+import AVFoundation
 
 struct TransactionAddScreen: View {
-    // ViewModel này thường được inject từ TabView hoặc View cha qua .environmentObject
     @EnvironmentObject var viewModel: TransactionFormViewModel
-    // ViewModel riêng để lấy danh sách category
     @StateObject private var categoryVM = CategoryViewModel()
-    
+    @StateObject private var speechService = SpeechRecognitionService() // <-- THÊM MỚI
     @State private var showSuccessToast = false
 
     private var canSave: Bool {
@@ -15,279 +13,348 @@ struct TransactionAddScreen: View {
     }
 
     var body: some View {
-        // NavigationStack cần thiết nếu CategoryListScreen được trình bày dạng sheet từ đây
         NavigationStack {
             ZStack {
                 VStack(spacing: 0) {
-                    CustomAddHeaderView(selectedType: $viewModel.type) // Header tùy chỉnh
-
+                    CustomAddHeaderView(
+                        selectedType: $viewModel.type,
+                        isRecording: speechService.isRecording,
+                        recordAction: {
+                            viewModel.toggleRecording()
+                        }
+                    )
                     ScrollView {
                         VStack(spacing: 12) {
-                            // Áp dụng style cho các khối con
                             TransactionFormFields(viewModel: viewModel)
                                 .formSectionStyle()
                             CategorySelectionGrid(viewModel: viewModel, categoryVM: categoryVM)
                                 .formSectionStyle()
                         }
-                        .padding() // Padding cho ScrollView
+                        .padding()
                     }
-                    
-                    // Nút bấm đã áp dụng style
                     Button(action: saveTransaction) {
-                        Text(viewModel.type == "expense" ? "Nhập khoản chi" : "Nhập khoản thu")
+                        Text(viewModel.type == "expense" ? "add_transaction_button_expense" : "add_transaction_button_income")
                     }
-                    .buttonStyle(PrimaryActionButtonStyle(isEnabled: canSave)) // Sử dụng style
-                    .disabled(!canSave) // Vẫn cần disabled
-                    .bottomActionBar() // Áp dụng style cho Button
+                    .buttonStyle(PrimaryActionButtonStyle(isEnabled: canSave))
+                    .disabled(!canSave)
+                    .bottomActionBar()
                 }
-                .background(Color(.systemGroupedBackground).ignoresSafeArea()) // Nền chung
-                .navigationBarHidden(true) // Dùng header tùy chỉnh
+                .background(Color(.systemGroupedBackground).ignoresSafeArea())
+                .navigationBarHidden(true)
                 .ignoresSafeArea(.keyboard, edges: .bottom)
-                .onTapGesture { hideKeyboard() } // Ẩn bàn phím khi chạm ra ngoài
+                .onTapGesture { hideKeyboard() }
                 .onAppear {
-                    // Reset ViewModel khi màn hình xuất hiện (quan trọng cho tab Add)
-                    // Đảm bảo ViewModel được reset đúng cách nếu nó được chia sẻ qua @EnvironmentObject
-                    // Nếu viewModel là @StateObject ở TabView cha, việc reset cần thực hiện ở đó khi tab chuyển đổi
-                    // Nếu viewModel được tạo mới mỗi khi tab này xuất hiện thì không cần reset ở đây.
-                    // Tạm thời comment dòng reset này nếu viewModel là EnvironmentObject dùng chung.
-                    // viewModel.reset()
-                    
-                    categoryVM.fetchAllCategories() // Luôn tải lại categories
+                    DispatchQueue.main.async {
+                        categoryVM.fetchAllCategories()       // Tải danh mục cho Grid
+                        viewModel.loadCategoryData()        // <--- BẮT BUỘC PHẢI CÓ DÒNG NÀY
+                        viewModel.setupSpeechService(speechService)
+                    }
                 }
                 
-                // Toast thông báo thành công
                 if showSuccessToast {
                     SuccessToastView()
                         .onAppear {
-                            // Tự động ẩn toast sau 1.5 giây
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                                 withAnimation(.spring()) { showSuccessToast = false }
                             }
                         }
-                        // Hiệu ứng xuất hiện/biến mất
                         .transition(.opacity.combined(with: .move(edge: .top)))
-                        .zIndex(1) // Đảm bảo Toast hiển thị trên cùng
+                        .zIndex(1)
                 }
+                VStack {
+                    Spacer()
+                    if speechService.isRecording {
+                        RecordingIndicatorView(
+                            transcribedText: $speechService.transcribedText,
+                            stopAction: {
+                                viewModel.toggleRecording()
+                            }
+                        )
+                        // Hiệu ứng trượt từ dưới lên
+                        .transition(.move(edge: .bottom))
+                        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+                    }
+                }
+                .edgesIgnoringSafeArea(.bottom) // Cho phép pop-up chạy xuống đáy
+                .animation(.spring(), value: speechService.isRecording)
+                .zIndex(1)
             }
         }
     }
     
-    /// Lưu giao dịch hiện tại và reset form
     private func saveTransaction() {
-        viewModel.save() // Lưu dữ liệu
-        viewModel.reset() // Reset các trường trong ViewModel về trạng thái ban đầu
-        withAnimation(.spring()) { showSuccessToast = true } // Hiển thị toast
+        viewModel.save()
+        viewModel.reset()
+        withAnimation(.spring()) { showSuccessToast = true }
     }
     
-    /// Ẩn bàn phím
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 
-// MARK: - Form Fields (Đã dọn dẹp)
 struct TransactionFormFields: View {
     @ObservedObject var viewModel: TransactionFormViewModel
     
     var body: some View {
         VStack(spacing: 0) {
-            // Hàng nhập Tiêu đề
             HStack {
-                Text("Tiêu đề").font(.subheadline).foregroundColor(.primary)
-                TextField("Nhập tiêu đề (tuỳ chọn)", text: $viewModel.transactionTitle)
+                Text("form_title").font(.subheadline).foregroundColor(.primary)
+                TextField(String(localized: "form_placeholder_title"), text: $viewModel.transactionTitle)
                     .multilineTextAlignment(.trailing).font(.subheadline)
             }.padding()
             
-            Divider().padding(.leading) // Đường kẻ ngang
+            Divider().padding(.leading)
             
-            // Hàng chọn Ngày
             HStack {
-                Text("Ngày").font(.subheadline).foregroundColor(.primary)
+                Text("form_date").font(.subheadline).foregroundColor(.primary)
                 Spacer()
                 DatePicker("", selection: $viewModel.date, displayedComponents: .date)
-                    .labelsHidden() // Ẩn label mặc định của DatePicker
-                    .environment(\.locale, Locale(identifier: "vi_VN")) // Đặt locale tiếng Việt
+                    .labelsHidden()
             }.padding()
             
             Divider().padding(.leading)
             
-            // Hàng nhập Ghi chú
             HStack {
-                Text("Ghi chú").font(.subheadline).foregroundColor(.primary)
-                TextField("Nhập ghi chú (tuỳ chọn)", text: $viewModel.note)
+                Text("form_note").font(.subheadline).foregroundColor(.primary)
+                TextField(String(localized: "form_placeholder_note"), text: $viewModel.note)
                     .multilineTextAlignment(.trailing).font(.subheadline)
             }.padding()
             
             Divider().padding(.leading)
             
-            // Hàng nhập Số tiền
             HStack {
-                Text(viewModel.type == "expense" ? "Tiền chi" : "Tiền thu").font(.subheadline).foregroundColor(.primary)
+                Text(viewModel.type == "expense" ? "form_amount_expense" : "form_amount_income")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
                 Spacer()
-                TextField("0", text: $viewModel.formattedAmount) // Hiển thị số tiền đã định dạng
-                    .keyboardType(.numberPad) // Bàn phím số
+                TextField("0", text: $viewModel.formattedAmount)
+                    .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing).font(.subheadline)
-                    .foregroundColor(viewModel.type == "expense" ? .red : .green) // Màu chữ theo loại
+                    .foregroundColor(viewModel.type == "expense" ? .red : .green)
                     .onChange(of: viewModel.formattedAmount) { newValue in
-                        // Xử lý khi người dùng nhập: chỉ giữ lại số, cập nhật rawAmount, định dạng lại formattedAmount
                         let digits = newValue.filter { "0123456789".contains($0) }
-                        viewModel.rawAmount = digits // Lưu trữ số thô
-                        viewModel.formattedAmount = AppUtils.formatCurrencyInput(digits) // Cập nhật hiển thị
+                        viewModel.rawAmount = digits
+                        viewModel.formattedAmount = AppUtils.formatCurrencyInput(digits)
                     }
-                Text("đ").foregroundColor(.secondary) // Đơn vị tiền tệ
+                Text("đ").foregroundColor(.secondary)
             }.padding()
         }
-        // Các modifier nền, cornerRadius đã bị xóa (do áp dụng .formSectionStyle() ở View cha)
     }
 }
 
-// MARK: - Category Grid (Đã dọn dẹp và dùng sheet)
 struct CategorySelectionGrid: View {
-    @ObservedObject var viewModel: TransactionFormViewModel // ViewModel của form chính
-    @ObservedObject var categoryVM: CategoryViewModel // ViewModel để lấy danh sách category
-    @State private var isShowingCategorySheet = false // State quản lý việc hiển thị sheet
+    @ObservedObject var viewModel: TransactionFormViewModel
+    @ObservedObject var categoryVM: CategoryViewModel
+    @State private var isShowingCategorySheet = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) { // Thêm spacing
-            Text("Danh mục")
+        VStack(alignment: .leading, spacing: 10) {
+            Text("form_category")
                 .font(.subheadline)
-                .foregroundColor(.primary) // Đảm bảo text rõ ràng
+                .foregroundColor(.primary)
                 .padding([.top, .horizontal])
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
-                // Lọc và hiển thị các category phù hợp với loại giao dịch (chi/thu)
                 ForEach(categoryVM.categories.filter { $0.type == viewModel.type }) { category in
                     CategoryGridButton(
                         category: category,
-                        isSelected: viewModel.selectedCategoryID == category.objectID // Kiểm tra ID để xác định chọn
+                        isSelected: viewModel.selectedCategoryID == category.objectID
                     ) {
-                        // Khi nhấn vào một category
-                        viewModel.selectedCategory = category // Cập nhật category object (có thể không cần thiết nếu chỉ dùng ID)
-                        viewModel.selectedCategoryID = category.objectID // Cập nhật ID được chọn
+                        viewModel.selectedCategory = category
+                        viewModel.selectedCategoryID = category.objectID
                     }
                 }
-                
-                // Nút "Chỉnh sửa" để mở sheet danh sách category
                 Button {
-                    isShowingCategorySheet = true // Kích hoạt sheet
+                    isShowingCategorySheet = true
                 } label: {
                     EditCategoryButton()
                 }
             }
-            .padding([.horizontal, .bottom]) // Padding cho lưới
+            .padding([.horizontal, .bottom])
         }
-        // Các modifier nền, cornerRadius đã bị xóa (do áp dụng .formSectionStyle() ở View cha)
         .sheet(isPresented: $isShowingCategorySheet) {
-            // Nội dung của sheet: CategoryListScreen bọc trong NavigationStack
             NavigationStack {
-                // Đảm bảo bạn đã có CategoryListScreen.swift
-                CategoryListScreen(isPresentingModal: true) // Truyền cờ để biết đang ở trong sheet
-                    // Truyền CategoryViewModel vào nếu cần thiết
-                    // .environmentObject(categoryVM) // Ví dụ nếu CategoryListScreen cần
+                CategoryListScreen(isPresentingModal: true)
             }
         }
     }
 }
 
-// MARK: - Các View phụ khác (Giữ nguyên)
-
-/// Header tùy chỉnh cho màn hình Add
 struct CustomAddHeaderView: View {
-    @Binding var selectedType: String // Binding để thay đổi loại giao dịch
+    @Binding var selectedType: String
+    var isRecording: Bool // Thêm mới
+    var recordAction: () -> Void // Thêm mới
+    
     var body: some View {
-        HStack {
-            Spacer() // Đẩy Picker ra giữa
-            Picker("", selection: $selectedType.animation()) { // Thêm animation khi đổi
-                Text("Tiền chi").tag("expense")
-                Text("Tiền thu").tag("income")
+        ZStack {
+            // 1. Picker được căn giữa
+            HStack {
+                Spacer()
+                Picker("", selection: $selectedType.animation()) {
+                    Text("common_expense").tag("expense")
+                    Text("common_income").tag("income")
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+                Spacer()
             }
-            .pickerStyle(.segmented) // Kiểu Segmented Control
-            .frame(width: 180) // Cố định chiều rộng
-            Spacer() // Đẩy Picker ra giữa
+            
+            // 2. Nút Micro được căn bên phải
+            HStack {
+                Spacer()
+                Button(action: recordAction) {
+                    Image(systemName: isRecording ? "stop.circle.fill" : "mic.fill")
+                        .font(.title2)
+                        .foregroundColor(isRecording ? .red : .blue)
+                        .padding(.trailing)
+                }
+            }
         }
-        .padding(.vertical, 10) // Padding trên dưới
-        .frame(height: 44) // Chiều cao tiêu chuẩn
-        .background(Color(.systemBackground)) // Nền trắng/đen hệ thống
+        .padding(.vertical, 10)
+        .frame(height: 44)
+        .background(Color(.systemBackground))
     }
 }
 
-/// Nút hiển thị một Category trong lưới
 struct CategoryGridButton: View {
-    let category: Category // Dữ liệu Category
-    let isSelected: Bool // Trạng thái có được chọn hay không
-    let action: () -> Void // Hành động khi nhấn nút
+    let category: Category
+    let isSelected: Bool
+    let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: 6) {
-                Image(systemName: category.iconName ?? "questionmark.circle.fill") // Icon
+                Image(systemName: category.iconName ?? "questionmark.circle.fill")
                     .font(.title3)
-                    .foregroundColor(IconProvider.color(for: category.iconName)) // Màu icon
-                
-                Text(category.name ?? "N/A") // Tên Category
-                    .font(.caption2) // Font nhỏ
-                    // Màu chữ thay đổi dựa trên trạng thái isSelected
+                    .foregroundColor(IconProvider.color(for: category.iconName))
+                Text(LocalizedStringKey(category.name ?? "common_not_available"))
+                    .font(.caption2)
                     .foregroundColor(isSelected ? IconProvider.color(for: category.iconName) : .secondary)
-                    .lineLimit(2) // Giới hạn 2 dòng
-                    .multilineTextAlignment(.center) // Căn giữa nếu 2 dòng
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
             }
-            .frame(width: 80, height: 70) // Kích thước cố định
-            .background(Color(.systemGray6)) // Nền xám nhạt
-            .cornerRadius(10) // Bo góc
-            .overlay( // Viền khi được chọn
+            .frame(width: 80, height: 70)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+            .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(isSelected ? IconProvider.color(for: category.iconName) : Color.clear, lineWidth: 2)
             )
-    
         }
-        // Thêm hiệu ứng nhấn nhẹ nếu muốn
         .scaleEffect(isSelected ? 1.05 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
     }
 }
 
-/// Nút "Chỉnh sửa" trong lưới Category
 struct EditCategoryButton: View {
     var body: some View {
         VStack(spacing: 6) {
-            Text("Chỉnh sửa")
+            Text("common_edit")
                 .font(.caption2)
                 .foregroundColor(.primary)
-            Image(systemName: "chevron.right") // Icon mũi tên
+            Image(systemName: "chevron.right")
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .frame(width: 80, height: 70) // Kích thước bằng CategoryGridButton
-        .background(Color(.systemGray6)) // Nền xám nhạt
-        .cornerRadius(10) // Bo góc
+        .frame(width: 80, height: 70)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
     }
 }
 
-/// View Toast thông báo thành công
 struct SuccessToastView: View {
     var body: some View {
         VStack(spacing: 15) {
-            Image(systemName: "checkmark.circle.fill") // Icon checkmark
+            Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 70))
-                .foregroundStyle(.green) // Màu xanh lá
-                // Hiệu ứng nảy lên
+                .foregroundStyle(.green)
                 .symbolEffect(.bounce.down.byLayer, value: true)
-
-            Text("Thêm giao dịch thành công")
+            Text("toast_add_success")
                 .font(.title3)
                 .fontWeight(.semibold)
-                .foregroundColor(.primary) // Màu chữ chính
+                .foregroundColor(.primary)
         }
-        .padding(30) // Padding lớn xung quanh
-        .background(.thinMaterial) // Nền mờ (thay vì ultraThinMaterial)
-        .cornerRadius(20) // Bo góc
-        .shadow(color: Color.black.opacity(0.1), radius: 10, y: 5) // Shadow nhẹ
-        .onAppear(perform: playSound) // Phát âm thanh khi xuất hiện
+        .padding(30)
+        .background(.thinMaterial)
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.1), radius: 10, y: 5)
+        .onAppear(perform: playSound)
     }
     
-    /// Phát âm thanh hệ thống (cần import AVFoundation)
     func playSound() {
-        // Sử dụng âm thanh mặc định cho thao tác thành công
-        AudioServicesPlaySystemSound(1054) // Hoặc thử 1306, 1004 tùy ý
+        AudioServicesPlaySystemSound(1054)
     }
 }
+
+// MARK: - VIEW POP-UP KHI GHI ÂM
+struct RecordingIndicatorView: View {
+    // Nhận văn bản đang được dịch
+    @Binding var transcribedText: String
+    // Nhận hành động "Dừng" từ ViewModel
+    var stopAction: () -> Void
+    
+    // Biến @State để tạo hiệu ứng sóng
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Đang lắng nghe...")
+                .font(.headline)
+                .foregroundColor(.primary)
+
+            // 2. Sóng âm (dùng biểu tượng của Apple và tạo hiệu ứng)
+            Image(systemName: "waveform")
+                .font(.system(size: 40))
+                .foregroundColor(.blue)
+                // Hiệu ứng lặp đi lặp lại
+                .symbolEffect(.variableColor.iterative.reversing,
+                              options: .repeating,
+                              value: isAnimating)
+
+            // 3. Hiển thị văn bản đang dịch
+            Text(transcribedText.isEmpty ? "Mời bạn nói..." : transcribedText)
+                .font(.title3.weight(.medium))
+                .foregroundColor(.secondary)
+                .frame(minHeight: 50, alignment: .center)
+                .padding(.horizontal)
+                .multilineTextAlignment(.center)
+                .animation(.easeInOut(duration: 0.2), value: transcribedText)
+
+            // 4. Nút Dừng
+            Button(action: stopAction) {
+                Image(systemName: "stop.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.red)
+                    .shadow(radius: 5)
+            }
+        }
+        .padding(.top, 20)
+        .padding(.bottom, 40) // Chừa không gian cho Home Indicator
+        .frame(maxWidth: .infinity)
+        .background(.thinMaterial) // Hiệu ứng mờ (giống ảnh)
+        .cornerRadius(20, corners: [.topLeft, .topRight]) // Bo góc trên
+        .shadow(color: .black.opacity(0.2), radius: 10, y: -5)
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
+// (Bạn có thể đã có extension này từ HomeScreen, nhưng tôi thêm lại cho chắc)
+// Extension để bo góc tùy chỉnh
+//extension View {
+//    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+//        clipShape(RoundedCorner(radius: radius, corners: corners))
+//    }
+//}
+//
+//struct RoundedCorner: Shape {
+//    var radius: CGFloat = .infinity
+//    var corners: UIRectCorner = .allCorners
+//    
+//    func path(in rect: CGRect) -> Path {
+//        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
+//        return Path(path.cgPath)
+//    }
+//}

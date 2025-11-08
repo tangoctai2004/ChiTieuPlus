@@ -1,11 +1,12 @@
 import Foundation
+import SwiftUI
 
 enum TabModel: String, CaseIterable {
-    case home = "Trang Chủ"
-    case category = "Danh Mục"
-    case transaction = "Thêm"
-    case statistics = "Thống kê"
-    case setting = "Cài đặt"
+    case home = "tabbar_home"
+    case category = "tabbar_category"
+    case transaction = "tabbar_add"
+    case statistics = "tabbar_statistic"
+    case setting = "tabbar_setting"
     
     // Cung cấp icon cho mỗi tab
     var systemImage: String {
@@ -21,5 +22,9 @@ enum TabModel: String, CaseIterable {
         case .setting:
             return "gearshape.fill"
         }
+    }
+    
+    var localizedName: LocalizedStringKey {
+        return LocalizedStringKey(self.rawValue)
     }
 }

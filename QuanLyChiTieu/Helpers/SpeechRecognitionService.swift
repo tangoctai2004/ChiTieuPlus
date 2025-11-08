@@ -1,3 +1,11 @@
+//
+//  SpeechRecognitionService.swift
+//  QuanLyChiTieu
+//
+//  Created by Tạ Ngọc Tài on 6/11/25.
+//
+
+
 import Foundation
 import Speech
 import AVFoundation

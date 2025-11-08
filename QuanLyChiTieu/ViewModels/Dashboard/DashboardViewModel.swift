@@ -1,10 +1,3 @@
-//
-//  DashboardViewModel.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 23/10/25.
-//
-
 import Foundation
 import Combine
 import CoreData
@@ -20,11 +13,9 @@ class DashboardViewModel: ObservableObject {
 
     // MARK: - Published Data
     
-    // -- Giao dịch thô --
     @Published var monthlyTransactions: [Transaction] = []
     @Published var yearlyTransactions: [Transaction] = []
     
-    // -- Thống kê tổng quan --
     @Published var totalMonthlyIncome: Double = 0
     @Published var totalMonthlyExpense: Double = 0
     @Published var netMonthlyBalance: Double = 0
@@ -33,7 +24,6 @@ class DashboardViewModel: ObservableObject {
     @Published var totalYearlyExpense: Double = 0
     @Published var netYearlyBalance: Double = 0
     
-    // -- Dữ liệu biểu đồ tròn --
     @Published var monthlyExpensePieData: [CategorySummary] = []
     @Published var monthlyIncomePieData: [CategorySummary] = []
     @Published var yearlyExpensePieData: [CategorySummary] = []
@@ -43,11 +33,14 @@ class DashboardViewModel: ObservableObject {
     private var allTransactions: [Transaction] = []
     private let repository: DataRepository
     private var cancellables = Set<AnyCancellable>()
-
-    // MARK: - Computed Display Properties (Cho DateNavigatorView)
+    
+    // MARK: - Computed Display Properties (ĐÃ SỬA: Áp dụng Localization)
     
     var currentMonthDisplay: String {
+        let selectedLocaleID = (try? LanguageSettings().selectedLanguage) ?? Locale.current.identifier
+        
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: selectedLocaleID)
         formatter.dateFormat = "MMMM, yyyy"
         
         var components = DateComponents()
@@ -61,7 +54,21 @@ class DashboardViewModel: ObservableObject {
     }
     
     var currentYearDisplay: String {
-        return "Năm \(String(selectedYear))"
+        let selectedLocaleID = (try? LanguageSettings().selectedLanguage) ?? Locale.current.identifier
+        
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: selectedLocaleID)
+        formatter.dateFormat = "yyyy" // Chỉ format năm
+        
+        var components = DateComponents()
+        components.year = selectedYear
+        
+        if let date = Calendar.current.date(from: components) {
+            // QUAN TRỌNG: Chỉ trả về chuỗi năm đã được định dạng
+            return formatter.string(from: date)
+        }
+        
+        return "N/A"
     }
     
     // MARK: - Init
@@ -77,16 +84,18 @@ class DashboardViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
+        // Đảm bảo khi selectedYear/selectedMonth thay đổi, UI cũng cập nhật
         Publishers.CombineLatest3($periodSelection, $selectedMonth, $selectedYear)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _, _, _ in
+                self?.objectWillChange.send()
                 self?.updateAllCalculations()
             }
             .store(in: &cancellables)
         refreshData()
     }
 
-//     MARK: - Public Functions
+    // MARK: - Public Functions
     
     func refreshData() {
         repository.fetchTransactions()

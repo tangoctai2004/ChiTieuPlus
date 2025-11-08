@@ -19,17 +19,19 @@ struct CategoryAddScreen: View {
             
             VStack(spacing: 15) {
                 VStack {
-                    TextField("Tên danh mục", text: $name).padding()
+                    TextField(String(localized: "form_category_name"), text: $name).padding()
                     Divider()
-                    Picker("Loại", selection: $selectedType) {
-                        Text("Chi tiêu").tag("expense")
-                        Text("Thu nhập").tag("income")
+                    // --- SỬA ĐỔI ---
+                    Picker("form_type", selection: $selectedType) { // Bỏ Text()
+                    // --- KẾT THÚC SỬA ĐỔI ---
+                        Text("common_expense").tag("expense")
+                        Text("common_income").tag("income")
                     }.pickerStyle(.segmented).padding()
                 }
                 .formSectionStyle()
 
                 VStack(alignment: .leading) {
-                    Text("Biểu tượng").font(.headline).padding([.top, .horizontal])
+                    Text("form_icon").font(.headline).padding([.top, .horizontal])
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 15) {
                             ForEach(iconList) { iconInfo in
@@ -49,7 +51,7 @@ struct CategoryAddScreen: View {
             .padding()
             .frame(maxHeight: .infinity, alignment: .top)
             Button(action: saveCategoryAction) {
-                Text("Lưu danh mục")
+                Text("category_add_save_button")
             }
             .buttonStyle(PrimaryActionButtonStyle(isEnabled: canSave))
             .disabled(!canSave)
@@ -72,11 +74,15 @@ struct CustomAddHeader: View {
     
     var body: some View {
         HStack {
-            Button("Huỷ") { onCancel() }
+            // --- SỬA ĐỔI ---
+            Button(action: { onCancel() }) { // Đổi cú pháp Button
+                Text("common_cancel")
+            }
+            // --- KẾT THÚC SỬA ĐỔI ---
                 .frame(width: 80, alignment: .leading)
                 .foregroundColor(.primary)
             Spacer()
-            Text("Thêm danh mục").font(.headline)
+            Text("category_add_title").font(.headline)
             Spacer()
             Spacer().frame(width: 80)
         }

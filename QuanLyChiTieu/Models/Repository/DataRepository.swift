@@ -15,13 +15,13 @@ struct TransactionFormData {
     var rawAmount: String
     var date: Date
     var type: String
-    // SỬA LỖI Ở ĐÂY: Phải là NSManagedObjectID?
     var selectedCategoryID: NSManagedObjectID?
 }
 
 class DataRepository {
     
     static let shared = DataRepository()
+    // Giữ nguyên context là main context (viewContext)
     private let context: NSManagedObjectContext
     
     let categoriesPublisher = CurrentValueSubject<[Category], Never>([])
@@ -31,7 +31,7 @@ class DataRepository {
         self.context = context
     }
     
-    // MARK: - Category Functions
+    // MARK: - Category Functions (Giữ nguyên)
     
     func fetchCategories() {
         let request: NSFetchRequest<Category> = Category.fetchRequest()
@@ -69,18 +69,55 @@ class DataRepository {
         saveAndRefreshData()
     }
     
-    // MARK: - Transaction Functions
+    func fetchAllCategoriesSync() -> [Category] {
+        let request: NSFetchRequest<Category> = Category.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        do {
+            // Dùng context của repository
+            return try context.fetch(request)
+        } catch {
+            print("❌ Lỗi khi fetch categories sync: \(error)")
+            return []
+        }
+    }
+    
+    // MARK: - Transaction Functions (ĐÃ TỐI ƯU)
     
     func fetchTransactions() {
-        let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
-        do {
-            let transactions = try context.fetch(request)
-            transactionsPublisher.send(transactions)
-        } catch {
-            print("❌ Lỗi khi fetch transactions: \(error)")
-            transactionsPublisher.send([])
+        // --- SỬA ĐỔI ---
+        // Sử dụng container để tạo background context và thực hiện fetch off-main-thread
+        CoreDataStack.shared.container.performBackgroundTask { backgroundContext in
+            
+            let request: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \Transaction.date, ascending: false)]
+            
+            do {
+                // 1. Fetch trên luồng nền (background)
+                let transactions = try backgroundContext.fetch(request)
+                
+                // 2. Lấy ObjectIDs để sử dụng an toàn trên Main Thread Context
+                let transactionIDs = transactions.map { $0.objectID }
+                
+                // 3. Lấy lại các đối tượng trên Main Context (viewContext)
+                let mainContext = self.context
+                
+                // Chuyển sang luồng Main Context để lấy object an toàn
+                mainContext.perform {
+                    let mainThreadTransactions = transactionIDs.compactMap {
+                        // Lấy đối tượng từ ID trên main context
+                        try? mainContext.existingObject(with: $0) as? Transaction
+                    }
+                    
+                    // 4. Publish kết quả về Main Thread (Combine sẽ xử lý)
+                    self.transactionsPublisher.send(mainThreadTransactions)
+                }
+                
+            } catch {
+                print("❌ Lỗi khi fetch transactions trên background: \(error)")
+                self.transactionsPublisher.send([])
+            }
         }
+        // --- KẾT THÚC SỬA ĐỔI ---
     }
 
     func addTransaction(formData: TransactionFormData) {
@@ -95,13 +132,14 @@ class DataRepository {
         newTransaction.createAt = Date()
         newTransaction.updateAt = Date()
         
-        // Bây giờ 'categoryID' đã đúng kiểu NSManagedObjectID?
         if let categoryID = formData.selectedCategoryID,
            let categoryInContext = context.object(with: categoryID) as? Category {
             newTransaction.category = categoryInContext
-            newTransaction.title = title.isEmpty ? (categoryInContext.name ?? "Giao dịch") : title
+            // Sửa logic title để dùng key
+            newTransaction.title = title.isEmpty ? (categoryInContext.name ?? "common_category") : title
         } else {
-            newTransaction.title = title.isEmpty ? "Giao dịch" : title
+            // Sửa logic title để dùng key
+            newTransaction.title = title.isEmpty ? "common_category" : title
         }
         
         saveAndRefreshData()
@@ -118,14 +156,15 @@ class DataRepository {
         transactionToEdit.type = formData.type
         transactionToEdit.updateAt = Date()
 
-        // Bây giờ 'categoryID' đã đúng kiểu NSManagedObjectID?
         if let categoryID = formData.selectedCategoryID,
            let categoryInContext = context.object(with: categoryID) as? Category {
             transactionToEdit.category = categoryInContext
-            transactionToEdit.title = title.isEmpty ? (categoryInContext.name ?? "Giao dịch") : title
+            // Sửa logic title để dùng key
+            transactionToEdit.title = title.isEmpty ? (categoryInContext.name ?? "common_category") : title
         } else {
             transactionToEdit.category = nil
-            transactionToEdit.title = title.isEmpty ? "Giao dịch" : title
+            // Sửa logic title để dùng key
+            transactionToEdit.title = title.isEmpty ? "common_category" : title
         }
 
         saveAndRefreshData()
@@ -144,6 +183,43 @@ class DataRepository {
             fetchTransactions()
         } catch {
             print("❌ Lỗi khi lưu context: \(error)")
+        }
+    }
+//    MARK: - RESET ALL DATA
+    func resetAllData() {
+        print("Bắt đầu quá trình reset (chỉ xoá Transactions)...")
+        
+        // 1. CHỈ tạo yêu cầu xóa cho Transaction
+        let transactionDeleteRequest = NSBatchDeleteRequest(fetchRequest: Transaction.fetchRequest())
+        transactionDeleteRequest.resultType = .resultTypeObjectIDs
+        
+        // (Chúng ta đã XÓA yêu cầu xóa Category)
+
+        do {
+            // 2. Thực thi yêu cầu xóa Transaction
+            let transactionResult = try context.execute(transactionDeleteRequest) as? NSBatchDeleteResult
+
+            // 3. Lấy ID của các đối tượng đã bị xóa
+            let transactionObjectIDs = transactionResult?.result as? [NSManagedObjectID] ?? []
+            
+            // 4. Cập nhật context để xóa các đối tượng khỏi bộ nhớ
+            if !transactionObjectIDs.isEmpty {
+                let changes = [NSDeletedObjectsKey: transactionObjectIDs]
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+                print("✅ Đã xóa thành công \(transactionObjectIDs.count) transactions.")
+            } else {
+                print("Không tìm thấy transaction nào để xóa.")
+            }
+            
+            // 5. Phát tín hiệu rỗng cho transactions,
+            // KHÔNG làm gì categoriesPublisher
+            transactionsPublisher.send([])
+            
+            // fetchCategories() // Có thể gọi fetch lại category nếu cần,
+            // nhưng vì không thay đổi nên không bắt buộc.
+
+        } catch {
+            print("❌ Lỗi khi thực hiện reset transactions: \(error)")
         }
     }
 }

@@ -5,3 +5,162 @@
 //  Created by Tạ Ngọc Tài on 24/10/25.
 //
 
+/* Localizable.strings (Vietnamese)
+  QuanLyChiTieu
+*/
+
+// MARK: - App Name
+"CFBundleDisplayName" = "Chi Tiêu+";
+
+// MARK: - Common (Dùng chung)
+"common_expense" = "Chi tiêu";
+"common_income" = "Thu nhập";
+"common_edit" = "Chỉnh sửa";
+"common_done" = "Hoàn thành";
+"common_delete" = "Xoá";
+"common_cancel" = "Huỷ";
+"common_update" = "Cập nhật";
+"common_save_changes" = "Lưu chỉnh sửa";
+"common_no_name" = "Không có tên";
+"common_not_available" = "N/A";
+"common_category" = "Danh mục";
+"common_no_data" = "Không có dữ liệu.";
+"common_skip" = "Bỏ qua";
+"common_month" = "Tháng";
+"common_year" = "Năm";
+"common_month_label" = "Tháng";
+"common_total_amount" = "Tổng tiền";
+"common_month_prefix" = "Tháng %@"; // Dùng cho "Tháng 1", "Tháng 2"
+
+// MARK: - Alerts (Thông báo)
+"alert_delete_confirmation_title" = "Xác nhận xoá";
+"alert_button_confirm_delete" = "Chắc chắn xoá";
+"alert_button_cancel" = "Không";
+"alert_button_ok" = "OK";
+"alert_delete_category_message" = "Bạn có chắc chắn muốn xoá danh mục \"%@\" không? Hành động này không thể hoàn tác.";
+"alert_delete_transaction_message" = "Bạn có chắc chắn muốn xoá giao dịch này không?";
+"alert_delete_success_title" = "Xoá thành công";
+
+// MARK: - Toast
+"toast_add_success" = "Thêm giao dịch thành công";
+
+// MARK: - Setting Screen
+"settings_title" = "Cài Đặt";
+"settings_help" = "Trợ giúp";
+"settings_section_general" = "Tùy Chỉnh Chung";
+"settings_row_language" = "Ngôn ngữ";
+"settings_row_appearance" = "Giao diện";
+"settings_appearance_light" = "Sáng";
+"settings_appearance_dark" = "Tối";
+"settings_appearance_system" = "Hệ thống";
+"settings_row_currency" = "Tiền tệ chính";
+"settings_row_week_start" = "Ngày bắt đầu tuần";
+"settings_section_data" = "Quản lý Dữ liệu";
+"settings_row_manage_categories" = "Quản lý Danh mục";
+"settings_row_export_data" = "Xuất Dữ liệu";
+"settings_section_security" = "Bảo mật";
+"settings_row_app_lock" = "Khóa ứng dụng (Face ID)";
+"settings_row_change_passcode" = "Đổi mật khẩu";
+"settings_section_notifications" = "Thông báo";
+"settings_row_daily_reminder" = "Nhắc nhở hàng ngày";
+"settings_row_reminder_time" = "Giờ nhắc nhở";
+"settings_section_about" = "Về ứng dụng";
+"settings_row_rate_app" = "Đánh giá ứng dụng";
+"settings_row_feedback" = "Góp ý & Hỗ trợ";
+"settings_row_privacy_policy" = "Chính sách quyền riêng tư";
+"settings_row_version" = "Phiên bản";
+"settings_section_danger" = "Vùng Nguy hiểm";
+"settings_row_reset_data" = "Đặt lại toàn bộ dữ liệu";
+"language_selection_title" = "Chọn Ngôn ngữ";
+"currency_selection_title" = "Chọn Tiền tệ";
+"week_start_title" = "Ngày bắt đầu tuần";
+"change_passcode_title" = "Đổi mật khẩu";
+"privacy_policy_title" = "Chính sách Quyền riêng tư";
+"alert_button_ok" = "OK";
+"alert_reset_all_data_message" = "Bạn có chắc chắn muốn xoá TOÀN BỘ dữ liệu không? Hành động này không thể hoàn tác. Ứng dụng sẽ trở về trạng thái ban đầu sau khi khởi động lại.";
+"alert_delete_category_message" = "Bạn có chắc chắn muốn xoá danh mục \"%@\" không? Hành động này không thể hoàn tác.";
+
+// MARK: - Category Screens (List, Add, Edit)
+"category_list_title" = "Danh mục";
+"category_list_add" = "Thêm danh mục";
+"category_add_title" = "Thêm danh mục";
+"category_edit_title" = "Chỉnh sửa danh mục";
+"category_add_save_button" = "Lưu danh mục";
+"form_category_name" = "Tên danh mục";
+"form_type" = "Loại";
+"form_icon" = "Biểu tượng";
+
+// MARK: - Transaction Screens (Add, Detail)
+"add_transaction_button_expense" = "Nhập khoản chi";
+"add_transaction_button_income" = "Nhập khoản thu";
+"form_title" = "Tiêu đề";
+"form_placeholder_title" = "Nhập tiêu đề (tuỳ chọn)";
+"form_date" = "Ngày";
+"form_note" = "Ghi chú";
+"form_placeholder_note" = "Nhập ghi chú (tuỳ chọn)";
+"form_amount_expense" = "Tiền chi";
+"form_amount_income" = "Tiền thu";
+"form_category" = "Danh mục";
+
+// MARK: - Home Screen
+"home_title_expense" = "CHI TIÊU";
+"home_filter_picker_label" = "Lọc giao dịch";
+"filter_all" = "Tất cả";
+"filter_income" = "Thu nhập";
+"filter_expense" = "Chi tiêu";
+"home_no_transactions" = "Chưa có giao dịch";
+
+// MARK: - Dashboard Screen
+"dashboard_period_monthly" = "Hàng Tháng";
+"dashboard_period_yearly" = "Hàng Năm";
+"dashboard_net_balance" = "Thu chi";
+
+// MARK: - Statistics Screens (Monthly, Yearly)
+"monthly_stats_chart_title" = "BIỂU ĐỒ PHÂN TÍCH 12 THÁNG";
+"yearly_stats_chart_title" = "BIỂU ĐỒ PHÂN TÍCH NĂM %@";
+"yearly_stats_total_transactions" = "Tổng giao dịch";
+"yearly_stats_monthly_average" = "Trung bình mỗi tháng";
+"yearly_stats_monthly_detail_header" = "CHI TIẾT HÀNG THÁNG";
+
+// MARK: - Default Categories
+"default_category_food" = "Ăn uống";
+"default_category_daily_spending" = "Chi tiêu hàng ngày";
+"default_category_clothing" = "Quần áo";
+"default_category_cosmetics" = "Mỹ phẩm";
+"default_category_party" = "Phí tiệc tùng";
+"default_category_medical" = "Y tế";
+"default_category_education" = "Giáo dục";
+"default_category_electricity" = "Tiền điện";
+"default_category_transport" = "Đi lại";
+"default_category_communication" = "Phí liên lạc";
+"default_category_housing" = "Tiền nhà";
+"default_category_salary" = "Tiền lương";
+"default_category_allowance" = "Tiền phụ cấp";
+"default_category_bonus" = "Tiền thưởng";
+"default_category_side_income" = "Thu nhập phụ";
+"default_category_investment" = "Đầu tư";
+"default_category_temporary_income" = "Thu nhập tạm thời";
+
+// MARK: - Tabbar Name
+"tabbar_home" = "Trang Chủ";
+"tabbar_category" = "Danh Mục";
+"tabbar_add" = "Thêm";
+"tabbar_statistic" = "Thống Kê";
+"tabbar_setting" = "Cài Đặt";
+
+
+// MARK: - Backup/Restore Screen
+"backup_export_title" = "Xuất dữ liệu hiện tại";
+"backup_export_desc" = "Có thể xuất dữ liệu đã ghi dưới dạng file CSV. Từ bây giờ khi thay đổi loại máy, hãy gửi thư vào địa chỉ email của mình và lưu dưới dạng sao lưu.";
+"backup_export_button" = "Xuất dữ liệu";
+"backup_import_title" = "Bạn có muốn sử dụng dữ liệu có sẵn để khôi phục không?";
+"backup_import_desc" = "Nếu bạn có tệp CSV đã sao lưu, bạn có thể tải và khôi phục tệp CSV. Sau khi thay đổi loại máy, bạn có thể sử dụng dữ liệu đã sao lưu và khôi phục lại bằng cách thực hiện quy trình sau.";
+"backup_import_process_title" = "Quy trình khôi phục";
+"backup_import_step1" = "1. Khởi động ứng dụng có thể mở file CSV (như là app mail)";
+"backup_import_step2" = "2. Tại ứng dụng đó, mở file CSV rồi bấm nút chia sẻ";
+"backup_import_step3" = "3. Chọn vào biểu tượng ứng dụng này";
+"common_loading" = "Đang chuẩn bị file...";
+
+//MARK: - Security
+"settings_row_app_lock_pin" = "Cài đặt mã PIN";
+"settings_row_use_faceid" = "Sử dụng FaceID";   

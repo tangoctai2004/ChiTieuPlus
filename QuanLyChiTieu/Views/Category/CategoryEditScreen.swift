@@ -26,17 +26,17 @@ struct CategoryEditScreen: View {
                 VStack(spacing: 15) {
                     // Khối Tên & Loại
                     VStack {
-                        TextField("Tên danh mục", text: $name).padding()
+                        TextField(String(localized: "form_category_name"), text: $name).padding()
                         Divider()
-                        Picker("Loại", selection: $selectedType) {
-                            Text("Chi tiêu").tag("expense")
-                            Text("Thu nhập").tag("income")
+                        Picker("form_type", selection: $selectedType) { // Đã sửa: Bỏ Text()
+                            Text("common_expense").tag("expense")
+                            Text("common_income").tag("income")
                         }.pickerStyle(.segmented).padding()
                     }
                     .formSectionStyle()
 
                     VStack(alignment: .leading) {
-                        Text("Biểu tượng").font(.headline).padding([.top, .horizontal])
+                        Text("form_icon").font(.headline).padding([.top, .horizontal])
                         ScrollView {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 15) {
                                 ForEach(iconList) { iconInfo in
@@ -59,12 +59,12 @@ struct CategoryEditScreen: View {
                 Button(role: .destructive) {
                     showingDeleteConfirmation = true
                 } label: {
-                    Text("Xoá")
+                    Text("common_delete")
                 }
                 .buttonStyle(DestructiveActionButtonStyle())
 
                 Button(action: updateCategoryAction) {
-                    Text("Cập nhật")
+                    Text("common_update")
                 }
                 .buttonStyle(PrimaryActionButtonStyle(isEnabled: canSave))
                 .disabled(!canSave)
@@ -78,11 +78,13 @@ struct CategoryEditScreen: View {
             self.selectedType = category.type ?? "expense"
             self.selectedIconName = category.iconName ?? IconProvider.allIcons.first?.iconName ?? ""
         }
-        .alert("Xác nhận xoá", isPresented: $showingDeleteConfirmation) {
-            Button("Chắc chắn xoá", role: .destructive) { deleteCategoryAction() }
-            Button("Không", role: .cancel) { }
+        // --- SỬA ĐỔI ---
+        .alert(Text("alert_delete_confirmation_title"), isPresented: $showingDeleteConfirmation) {
+            Button("alert_button_confirm_delete", role: .destructive) { deleteCategoryAction() } // Bỏ Text()
+            Button("alert_button_cancel", role: .cancel) { } // Bỏ Text()
         } message: {
-            Text("Bạn có chắc chắn muốn xoá danh mục \"\(name)\" không?")
+        // --- KẾT THÚC SỬA ĐỔI ---
+            Text(String.localizedStringWithFormat(NSLocalizedString("alert_delete_category_message", comment: ""), name))
         }
         .addSwipeBackGesture()
     }
@@ -102,11 +104,15 @@ struct CustomEditHeader: View {
     let onCancel: () -> Void
     var body: some View {
         HStack {
-            Button("Huỷ") { onCancel() }
+            // --- SỬA ĐỔI ---
+            Button(action: { onCancel() }) { // Đã sửa: Đổi cú pháp Button
+                Text("common_cancel")
+            }
+            // --- KẾT THÚC SỬA ĐỔI ---
                 .frame(width: 80, alignment: .leading)
                 .foregroundColor(.primary)
             Spacer()
-            Text("Chỉnh sửa danh mục").font(.headline)
+            Text("category_edit_title").font(.headline)
             Spacer()
             Spacer().frame(width: 80)
         }

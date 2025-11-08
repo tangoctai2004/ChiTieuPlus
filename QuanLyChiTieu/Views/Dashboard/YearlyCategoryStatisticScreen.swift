@@ -1,10 +1,3 @@
-//
-//  YearlyCategoryStatisticScreen.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 24/10/25.
-//
-
 import SwiftUI
 import Charts
 import CoreData
@@ -21,7 +14,9 @@ struct YearlyCategoryStatisticScreen: View {
 
     private var chartCardView: some View {
         VStack(alignment: .center, spacing: 8) {
-            Text("BIỂU ĐỒ PHÂN TÍCH NĂM \(String(viewModel.selectedYear))")
+            // --- SỬA ---
+            // Lấy tiêu đề đã dịch từ ViewModel
+            Text(viewModel.localizedChartTitle)
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top)
@@ -29,8 +24,9 @@ struct YearlyCategoryStatisticScreen: View {
             
             Chart(viewModel.monthlyChartData) { dataPoint in
                 BarMark(
-                    x: .value("Tháng", dataPoint.monthLabel),
-                    y: .value("Tổng tiền", max(0, dataPoint.totalAmount))
+                    // Trục X (T1.../Jan...) đã được ViewModel xử lý
+                    x: .value(Text(NSLocalizedString("common_month_label", comment: "")), dataPoint.monthLabel),
+                    y: .value(Text(NSLocalizedString("common_total_amount", comment: "")), max(0, dataPoint.totalAmount))
                 )
                 .foregroundStyle(viewModel.categoryColor)
                 .annotation(position: .top, alignment: .center) {
@@ -41,6 +37,7 @@ struct YearlyCategoryStatisticScreen: View {
                     }
                 }
             }
+            // ... (Giữ nguyên phần còn lại của biểu đồ) ...
             .chartYAxis {
                 AxisMarks(position: .leading, values: .automatic(desiredCount: 5)) { value in
                     AxisGridLine()
@@ -75,7 +72,8 @@ struct YearlyCategoryStatisticScreen: View {
     private var summaryInfoView: some View {
         VStack(spacing: 12) {
             HStack {
-                Text("Tổng giao dịch")
+                // --- SỬA ---
+                Text(viewModel.localizedTotalTransactions)
                     .font(.headline)
                 Spacer()
                 Text(AppUtils.formattedCurrency(viewModel.totalYearlyAmount))
@@ -84,7 +82,8 @@ struct YearlyCategoryStatisticScreen: View {
             }
             Divider()
             HStack {
-                Text("Trung bình mỗi tháng")
+                // --- SỬA ---
+                Text(viewModel.localizedMonthlyAverage)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -101,12 +100,15 @@ struct YearlyCategoryStatisticScreen: View {
 
     private var monthSummaryListView: some View {
         List {
-            Section(header: Text("CHI TIẾT HÀNG THÁNG")) {
+            // --- SỬA ---
+            Section(header: Text(viewModel.localizedMonthlyDetailHeader)) {
                 ForEach(viewModel.monthlyChartData) { dataPoint in
                     
                     NavigationLink(value: dataPoint) {
                         HStack {
-                            Text("Tháng \(dataPoint.month)")
+                            // --- SỬA ---
+                            // Lấy tên tháng đã dịch từ ViewModel
+                            Text(viewModel.localizedMonthPrefixes[dataPoint.month] ?? "Month \(dataPoint.month)")
                                 .font(dataPoint.totalAmount > 0 ? .headline : .subheadline)
                                 .foregroundColor(dataPoint.totalAmount > 0 ? .primary : .secondary)
                             Spacer()
@@ -148,7 +150,7 @@ struct YearlyCategoryStatisticScreen: View {
                 viewModel: MonthlyCategoryStatisticViewModel(
                     categorySummary: viewModel.categorySummary,
                     selectedMonth: dataPoint.month,
-                    selectedYear: viewModel.selectedYear, 
+                    selectedYear: viewModel.selectedYear,
                     repository: DataRepository.shared
                 )
             )
@@ -160,9 +162,11 @@ struct YearlyCategoryStatisticScreen: View {
         .toolbar {
              ToolbarItem(placement: .principal) {
                  VStack {
-                     Text("\(viewModel.categoryName) (\(String(viewModel.selectedYear)))")
+                     // --- SỬA ---
+                     // Lấy tên category đã dịch từ ViewModel
+                     Text(viewModel.localizedCategoryName)
                         .font(.headline)
-                     Text(AppUtils.formattedCurrency(viewModel.totalYearlyAmount))
+                     Text("(\(String(viewModel.selectedYear))) \(AppUtils.formattedCurrency(viewModel.totalYearlyAmount))")
                         .font(.caption)
                         .foregroundColor(viewModel.categoryColor)
                  }
@@ -183,8 +187,7 @@ struct YearlyCategoryStatisticScreen: View {
         .simultaneousGesture(backGesture)
     }
 
-    // MARK: - Helper Functions
-
+    // MARK: - Helper Functions (Giữ nguyên)
     private func formatAxisAmount(_ amount: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal

@@ -1,10 +1,3 @@
-//
-//  MonthlyCategoryStatisticViewModel.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 23/10/25.
-//
-
 import Foundation
 import Combine
 import CoreData
@@ -18,40 +11,50 @@ struct GroupedTransactions: Identifiable, Hashable {
 
 class MonthlyCategoryStatisticViewModel: ObservableObject {
     
-    // MARK: - Published Properties
+    // ... (Các thuộc tính @Published giữ nguyên) ...
     @Published var monthlyChartData: [ChartDataPoint] = []
     @Published var selectedChartMonth: Int?
     @Published var displayedTransactions: [Transaction] = []
     @Published var groupedDisplayedTransactions: [GroupedTransactions] = []
 
-    // MARK: - Read-only Properties
-    let categoryName: String
+    // ... (Các thuộc tính Read-only giữ nguyên) ...
+    let categoryName: String // Chứa KEY của Category
     let categoryColor: Color
     let initialMonthLabel: String
     
-    // MARK: - Thuộc tính mới cho Navigation Title
+    var localizedCategoryName: LocalizedStringKey {
+        return LocalizedStringKey(categoryName)
+    }
+    
     var selectedPeriodString: String {
         let month = selectedChartMonth ?? initialSelectedMonth
         let year = selectedYear
-        return "Tháng \(month)/\(year)"
+        
+        // Lấy Locale từ LanguageSettings
+        let selectedLocaleID = (try? LanguageSettings().selectedLanguage) ?? Locale.current.identifier
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: selectedLocaleID)
+        formatter.dateFormat = "M/yyyy"
+        
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        
+        if let date = Calendar.current.date(from: components) {
+            return formatter.string(from: date)
+        }
+        return "\(month)/\(year)"
     }
 
-    // MARK: - Private Properties
+    // ... (Các thuộc tính Private giữ nguyên) ...
     private let repository: DataRepository
     private var cancellables = Set<AnyCancellable>()
-    
     private var allTransactionsForYear: [Transaction] = []
-    
     private let selectedYear: Int
     private let initialSelectedMonth: Int
     private let categoryToFilter: String
     
-    private let headerFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd/MM/yyyy"
-        return formatter
-    }()
-
     // MARK: - Init
     
     init(
@@ -62,24 +65,61 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
     ) {
         self.categoryName = categorySummary.name
         self.categoryColor = categorySummary.color
-        self.categoryToFilter = categorySummary.name // Dùng tên để lọc
+        self.categoryToFilter = categorySummary.name
         
         self.selectedYear = selectedYear
         self.initialSelectedMonth = selectedMonth
         
         self.repository = repository
         
-        self.initialMonthLabel = "T\(initialSelectedMonth)"
+        // --- (BẮT ĐẦU SỬA ĐỔI) ---
+        
+        // 1. Lấy ngôn ngữ app đã lưu
+        let selectedLocaleID = (try? LanguageSettings().selectedLanguage) ?? Locale.current.identifier
+
+        // 2. Khởi tạo formatter (chỉ dùng cho trường hợp không phải tiếng Việt)
+        let monthFormatter: DateFormatter = {
+            let f = DateFormatter()
+            f.locale = Locale(identifier: selectedLocaleID)
+            f.dateFormat = "MMM"
+            return f
+        }()
+        
+        // 3. Tạo ChartDataPoint với logic kiểm tra ngôn ngữ
+        let initialChartData = (1...12).map { month -> ChartDataPoint in
+            
+            let monthName: String // Khai báo biến
+            
+            if selectedLocaleID == "vi" {
+                // Yêu cầu của bạn: "T1", "T2", ...
+                monthName = "T\(month)"
+            } else {
+                // Giữ logic cũ cho các ngôn ngữ khác (vd: "Jan", "Feb" cho tiếng Anh)
+                var components = DateComponents()
+                components.year = selectedYear
+                components.month = month
+                let date = Calendar.current.date(from: components)!
+                monthName = monthFormatter.string(from: date)
+            }
+            
+            return ChartDataPoint(month: month, monthLabel: monthName, totalAmount: 0)
+        }
+        
+        // 4. Gán giá trị cho các thuộc tính đã Published
+        self.monthlyChartData = initialChartData
+        
+        // 5. Sử dụng biến cục bộ để gán initialMonthLabel một cách an toàn
+        self.initialMonthLabel = initialChartData[initialSelectedMonth - 1].monthLabel
+        
+        // --- (KẾT THÚC SỬA ĐỔI) ---
+        
         self.selectedChartMonth = initialSelectedMonth
         
-        self.monthlyChartData = (1...12).map {
-            ChartDataPoint(month: $0, monthLabel: "T\($0)", totalAmount: 0)
-        }
-
         subscribeToRepository()
-        
         repository.fetchTransactions()
     }
+    
+    // ... (Phần còn lại của file giữ nguyên) ...
     
     private func subscribeToRepository() {
         repository.transactionsPublisher
@@ -105,9 +145,9 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
             return date >= startOfYear && date < endOfYear && txCategoryName == self.categoryToFilter
         }
         
-        var newChartData = (1...12).map {
-            ChartDataPoint(month: $0, monthLabel: "T\($0)", totalAmount: 0)
-        }
+        var newChartData = self.monthlyChartData
+        
+        newChartData = newChartData.map { ChartDataPoint(month: $0.month, monthLabel: $0.monthLabel, totalAmount: 0) }
         
         for transaction in self.allTransactionsForYear {
             guard let date = transaction.date else { continue }
@@ -136,7 +176,7 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
         
         self.groupedDisplayedTransactions = grouped.map { (date, transactions) in
             GroupedTransactions(date: date, items: transactions)
-        }.sorted(by: { $0.date > $1.date }) // Sắp xếp các ngày mới nhất lên đầu
+        }.sorted(by: { $0.date > $1.date })
     }
     
     var displayedTransactionsTotal: Double {
@@ -146,11 +186,21 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
     // MARK: - View Helpers
     
     func formattedSectionHeaderDate(_ date: Date) -> String {
+        let selectedLocaleID = (try? LanguageSettings().selectedLanguage) ?? Locale.current.identifier
+        
+        let headerFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: selectedLocaleID)
+            formatter.dateFormat = "dd/MM/yyyy"
+            return formatter
+        }()
+        
+        // Giả định bạn đã thêm key cho "Hôm nay" và "Hôm qua" vào Localizable.strings
         if Calendar.current.isDateInToday(date) {
-            return "Hôm nay"
+            return NSLocalizedString("Hôm nay", comment: "Today")
         }
         if Calendar.current.isDateInYesterday(date) {
-            return "Hôm qua"
+            return NSLocalizedString("Hôm qua", comment: "Yesterday")
         }
         return headerFormatter.string(from: date)
     }

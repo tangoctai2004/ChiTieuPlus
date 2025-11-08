@@ -1,9 +1,19 @@
 import SwiftUI
 import CoreData
 
-// MARK: - Transaction Row (Giữ nguyên)
+// MARK: - Transaction Row
 struct TransactionRow: View {
     @ObservedObject var transaction: Transaction
+    
+    // Tự động dịch "key" nếu category.name là key
+    private var categoryName: LocalizedStringKey {
+        LocalizedStringKey(transaction.category?.name ?? "common_category")
+    }
+    
+    // Tự động dịch "key" nếu transaction.title là key
+    private var transactionTitle: LocalizedStringKey {
+        LocalizedStringKey(transaction.title ?? "common_no_name")
+    }
     
     private var iconName: String {
         IconProvider.color(for: transaction.category?.iconName) == .primary ? "questionmark" : transaction.category?.iconName ?? "questionmark"
@@ -23,11 +33,13 @@ struct TransactionRow: View {
                 .clipShape(Circle())
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(transaction.title ?? "Không tên")
+                // Sử dụng transactionTitle đã được bọc LocalizedStringKey
+                Text(transactionTitle)
                     .font(.system(.headline, design: .rounded))
                     .foregroundColor(.primary)
                 
-                Text(transaction.category?.name ?? "Danh mục")
+                // Sử dụng categoryName đã được bọc LocalizedStringKey
+                Text(categoryName)
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundColor(.secondary)
             }
@@ -48,18 +60,22 @@ struct TransactionRow: View {
     }
 }
 
-// MARK: - HomeScreen (ĐÃ CẬP NHẬT)
+// MARK: - HomeScreen (Đã tối ưu)
 struct HomeScreen: View {
+    // 1. Sử dụng @StateObject để quản lý ViewModel (Combine model)
+    // Tận dụng việc ViewModel đã được tối ưu để Fetch data trên background thread
     @StateObject private var viewModel = TransactionViewModel()
-    
+
     @State private var selectedFilter: FilterType = .all
     enum FilterType: String, CaseIterable {
-        case all = "Tất cả"
-        case income = "Thu nhập"
-        case expense = "Chi tiêu"
+        case all = "filter_all"
+        case income = "filter_income"
+        case expense = "filter_expense"
+        
+        var localizedName: LocalizedStringKey { LocalizedStringKey(rawValue) }
     }
     
-    // --- TẠO BIẾN GRADIENT ---
+    // --- Biến Gradient (Giữ nguyên) ---
     private var gradient: LinearGradient {
         LinearGradient(
             colors: [.red, .purple],
@@ -68,30 +84,50 @@ struct HomeScreen: View {
         )
     }
     
+    // 2. Tách riêng logic lọc và nhóm ra khỏi `body`
+    // Tốc độ phụ thuộc vào số lượng item trong viewModel.allTransactions
+    private var filteredTransactions: [Transaction] {
+        switch selectedFilter {
+        case .all:
+            return viewModel.allTransactions
+        case .income:
+            return viewModel.allTransactions.filter { $0.type == "income" }
+        case .expense:
+            return viewModel.allTransactions.filter { $0.type == "expense" }
+        }
+    }
+
+    // Nhóm theo ngày
+    private var groupedTransactions: [(date: Date, items: [Transaction])] {
+        let grouped = Dictionary(grouping: filteredTransactions) { transaction in
+            Calendar.current.startOfDay(for: transaction.date ?? Date())
+        }
+        // Sắp xếp nhóm theo ngày giảm dần
+        return grouped.sorted { $0.key > $1.key }.map { (date: $0.key, items: $0.value) }
+    }
+
     var body: some View {
         NavigationStack {
             Color(.systemGroupedBackground)
                 .ignoresSafeArea()
                 .overlay(
                     VStack(spacing: 0) {
+                        // --- Header Title (Giữ nguyên) ---
                         VStack(spacing: 0) {
-                            VStack(spacing: 0) {
-                                // --- THAY ĐỔI Ở ĐÂY ---
-                                (Text("CHI TIÊU")
-                                    .foregroundColor(.primary)
-                                +
-                                Text("+")
-                                    .foregroundStyle(gradient)
-                                )
-                                .font(.custom("Bungee-Regular", size: 40))
-                                .padding(.top, 13)
-                                // --- KẾT THÚC THAY ĐỔI ---
-                            }
+                            (Text("home_title_expense")
+                                .foregroundColor(.primary)
+                            +
+                            Text("+")
+                                .foregroundStyle(gradient)
+                            )
+                            .font(.custom("Bungee-Regular", size: 40))
+                            .padding(.top, 13)
                         }
-    
-                        Picker("Lọc giao dịch", selection: $selectedFilter.animation(.easeInOut(duration: 0.3))) {
+                        
+                        // --- Picker (Giữ nguyên) ---
+                        Picker("home_filter_picker_label", selection: $selectedFilter.animation(.easeInOut(duration: 0.3))) {
                             ForEach(FilterType.allCases, id: \.self) { type in
-                                Text(type.rawValue).tag(type)
+                                Text(type.localizedName).tag(type)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -104,75 +140,64 @@ struct HomeScreen: View {
                         .padding(.top, 20)
                         
                         // --- DANH SÁCH GIAO DỊCH ---
+                        // 3. Sử dụng LazyVStack bên trong ScrollView
                         ScrollView {
-                            VStack(spacing: 18) {
-                                if filteredTransactions().isEmpty {
+                            LazyVStack(spacing: 18, pinnedViews: [.sectionHeaders]) { // Thêm pinnedViews
+                                if groupedTransactions.isEmpty {
+                                    // --- Phần "Chưa có giao dịch" (Giữ nguyên) ---
                                     VStack(spacing: 12) {
                                         Image(systemName: "tray")
                                             .font(.system(size: 60))
                                             .foregroundColor(.secondary)
-                                        Text("Chưa có giao dịch")
+                                        Text("home_no_transactions")
                                             .foregroundColor(.secondary)
                                             .font(.title3)
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.top, 100)
                                 } else {
-                                    ForEach(groupedFilteredTransactions(), id: \.date) { group in
-                                        Text(formattedDate(group.date))
-                                            .font(.callout.weight(.semibold))
-                                            .foregroundColor(.secondary)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(.top, 15)
-                                            .padding(.leading, 5)
-                                        
-                                        ForEach(group.items, id: \.id) { transaction in
-                                            NavigationLink {
-                                                TransactionDetailScreen(
-                                                    viewModel: TransactionFormViewModel(transaction: transaction)
-                                                )
-                                            } label: {
-                                                TransactionRow(transaction: transaction)
+                                    // 4. Lặp qua các nhóm đã tính toán
+                                    ForEach(groupedTransactions, id: \.date) { group in
+                                        // Section Header (Đã tối ưu)
+                                        Section { // Bọc ForEach con trong Section
+                                            ForEach(group.items, id: \.id) { transaction in
+                                                NavigationLink {
+                                                    TransactionDetailScreen(
+                                                        viewModel: TransactionFormViewModel(transaction: transaction)
+                                                    )
+                                                } label: {
+                                                    TransactionRow(transaction: transaction)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
                                             }
-                                            .buttonStyle(PlainButtonStyle())
+                                        } header: { // Đưa header vào Section
+                                            Text(formattedDate(group.date))
+                                                .font(.callout.weight(.semibold))
+                                                .foregroundColor(.secondary)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(.vertical, 8) // Thêm padding cho header
+                                                .background(Color(.systemGroupedBackground)) // Nền cho header dính
+                                                .padding(.leading, 5) // Giữ padding cũ
                                         }
                                     }
                                 }
                             }
                             .padding(.horizontal)
                             .padding(.bottom, 10)
-                            .animation(.easeOut(duration: 0.4), value: filteredTransactions())
                         }
                     }
                     .background(Color(.systemGroupedBackground))
                 )
             .navigationBarHidden(true)
         }
-    }
-    
-    // --- CÁC HÀM LOGIC GIỮ NGUYÊN 100% ---
-    
-    private func filteredTransactions() -> [Transaction] {
-        switch selectedFilter {
-        case .all:
-            return viewModel.allTransactions
-        case .income:
-            return viewModel.allTransactions.filter { $0.type == "income" }
-        case .expense:
-            return viewModel.allTransactions.filter { $0.type == "expense" }
+        .onAppear {
+            DispatchQueue.main.async { // <--- Chỉ cần thêm dòng này
+                viewModel.fetchTransactions()
+            } // <--- Và dòng này
         }
     }
     
-    private func groupedFilteredTransactions() -> [(date: Date, items: [Transaction])] {
-        let filtered = filteredTransactions()
-        let groupDict = Dictionary(grouping: filtered) { transaction in
-            Calendar.current.startOfDay(for: transaction.date ?? Date())
-        }
-        return groupDict.map { (key, value) in
-            (date: key, items: value)
-        }.sorted { $0.date > $1.date }
-    }
-    
+    // --- Hàm formattedDate (Giữ nguyên) ---
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"

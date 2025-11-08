@@ -14,7 +14,7 @@ struct MonthlyCategoryStatisticScreen: View {
 
     private var chartCardView: some View {
         VStack(alignment: .center, spacing: 8) {
-            Text("BIỂU ĐỒ PHÂN TÍCH 12 THÁNG")
+            Text("monthly_stats_chart_title")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top)
@@ -22,8 +22,8 @@ struct MonthlyCategoryStatisticScreen: View {
             
             Chart(viewModel.monthlyChartData) { dataPoint in
                 BarMark(
-                    x: .value("Tháng", dataPoint.monthLabel),
-                    y: .value("Tổng tiền", max(0, dataPoint.totalAmount))
+                    x: .value(Text("common_month_label"), dataPoint.monthLabel),
+                    y: .value(Text("common_total_amount"), max(0, dataPoint.totalAmount))
                 )
                 .foregroundStyle(viewModel.categoryColor)
                 .opacity(dataPoint.month == viewModel.selectedChartMonth ? 1.0 : 0.5)
@@ -49,7 +49,7 @@ struct MonthlyCategoryStatisticScreen: View {
             .chartXAxis {
                 AxisMarks(values: .automatic) { value in
                     AxisGridLine()
-                    AxisValueLabel()
+                    AxisValueLabel() // Displays localized month names
                 }
             }
             .frame(height: 200)
@@ -57,14 +57,20 @@ struct MonthlyCategoryStatisticScreen: View {
             .chartScrollableAxes(.horizontal)
             .chartXScale(range: .plotDimension(padding: 10))
             .chartScrollPosition(initialX: viewModel.initialMonthLabel)
+            // MARK: Chart Tap Gesture
             .chartGesture { proxy in
                 SpatialTapGesture()
                     .onEnded { value in
                         let location = value.location
-                        if let monthString: String = proxy.value(atX: location.x, as: String.self),
-                           let month = Int(monthString.dropFirst()) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                viewModel.updateDisplayedTransactions(for: month)
+                        // Get the localized month name ("Jan", "Feb"...) from tap
+                        if let monthLabelTapped: String = proxy.value(atX: location.x, as: String.self) {
+                            // Find the data point matching the tapped month name
+                            if let matchingDataPoint = viewModel.monthlyChartData.first(where: { $0.monthLabel == monthLabelTapped }) {
+                                let monthNumber = matchingDataPoint.month // Get the month number (1, 2...)
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    // Update ViewModel with the month number
+                                    viewModel.updateDisplayedTransactions(for: monthNumber)
+                                }
                             }
                         }
                     }
@@ -85,7 +91,7 @@ struct MonthlyCategoryStatisticScreen: View {
                 ForEach(viewModel.groupedDisplayedTransactions, id: \.date) { group in
                     let dailyTotal = group.items.reduce(0) { $0 + ($1.amount.isNaN ? 0 : $1.amount) }
                     let headerView = HStack {
-                        Text(viewModel.formattedSectionHeaderDate(group.date))
+                        Text(viewModel.formattedSectionHeaderDate(group.date)) // Already localized in ViewModel
                         Spacer()
                         Text("(\(AppUtils.formattedCurrency(dailyTotal)))")
                     }
@@ -98,7 +104,7 @@ struct MonthlyCategoryStatisticScreen: View {
                     Section(header: headerView) {
                         ForEach(group.items) { transaction in
                             NavigationLink(value: transaction) {
-                                TransactionRow(transaction: transaction)
+                                TransactionRow(transaction: transaction) // Assumes TransactionRow handles its own localization
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -136,12 +142,21 @@ struct MonthlyCategoryStatisticScreen: View {
                 viewModel: TransactionFormViewModel(transaction: transaction)
             )
         }
-        .navigationTitle(
-            "\(viewModel.categoryName) (\(viewModel.selectedPeriodString)) \(AppUtils.formattedCurrency(viewModel.displayedTransactionsTotal))"
-        )
+        
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack {
+                    Text(viewModel.localizedCategoryName)
+                        .font(.headline)
+                    Text("(\(viewModel.selectedPeriodString)) \(AppUtils.formattedCurrency(viewModel.displayedTransactionsTotal))")
+                        .font(.caption)
+                        .foregroundColor(viewModel.categoryColor) // Apply color here
+                }
+            }
+            
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     dismiss()
@@ -159,6 +174,7 @@ struct MonthlyCategoryStatisticScreen: View {
 
     // MARK: - Helper Functions
 
+    // Formats amount for Y-axis labels
     private func formatAxisAmount(_ amount: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal

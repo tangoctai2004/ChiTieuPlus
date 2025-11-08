@@ -1,10 +1,3 @@
-//
-//  DashboardScreen.swift
-//  QuanLyChiTieu
-//
-//  Created by Tạ Ngọc Tài on 23/10/25.
-//
-
 import SwiftUI
 import CoreData
 import Charts
@@ -19,6 +12,8 @@ struct DashboardScreen: View {
     @State private var isShowingMonthYearPicker = false
     @State private var isShowingYearPicker = false
 
+    @EnvironmentObject var languageSettings: LanguageSettings
+    
     private func triggerChartAnimation() {
         animateChart = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -32,13 +27,13 @@ struct DashboardScreen: View {
 
         let dragGesture = DragGesture()
             .onEnded { value in
-                if value.translation.width > 50 { // Lướt phải
+                if value.translation.width > 50 {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.goToPreviousPeriod()
                         triggerChartAnimation()
                     }
                 }
-                if value.translation.width < -50 { // Lướt trái
+                if value.translation.width < -50 {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         viewModel.goToNextPeriod()
                         triggerChartAnimation()
@@ -54,11 +49,11 @@ struct DashboardScreen: View {
                     VStack(spacing: 0) {
                         // MARK: - Top Nav
                         HStack {
-                            Button(action: {}) { Image(systemName: "magnifyingglass").font(.title3) }.disabled(true).opacity(0) // Nút ẩn để căn giữa
+                            Button(action: {}) { Image(systemName: "magnifyingglass").font(.title3) }.disabled(true).opacity(0)
                             Spacer()
                             Picker("", selection: $viewModel.periodSelection.animation(.easeInOut(duration: 0.3))) {
-                                Text("Hàng Tháng").tag(0)
-                                Text("Hàng Năm").tag(1)
+                                Text("dashboard_period_monthly").tag(0)
+                                Text("dashboard_period_yearly").tag(1)
                             }
                             .pickerStyle(.segmented)
                             .frame(width: 200)
@@ -72,7 +67,7 @@ struct DashboardScreen: View {
 
                         // MARK: - Main Content
                         VStack(spacing: 0) {
-                            // MARK: - Card Thống kê (Biểu đồ + Tổng)
+                            // MARK: - Card Thống kê
                             VStack(spacing: 0) {
                                 DateNavigatorView(
                                     displayDate: viewModel.periodSelection == 0 ? viewModel.currentMonthDisplay : viewModel.currentYearDisplay,
@@ -109,14 +104,14 @@ struct DashboardScreen: View {
                                 .padding(.top, 8)
 
                                 Picker("", selection: $viewModel.chartTabSelection.animation(.easeInOut(duration: 0.3))) {
-                                    Text("Chi tiêu").tag(0)
-                                    Text("Thu nhập").tag(1)
+                                    Text("common_expense").tag(0)
+                                    Text("common_income").tag(1)
                                 }
                                 .pickerStyle(.segmented)
                                 .padding(.horizontal)
                                 .padding(.top, 16)
 
-                                // Chọn biểu đồ dựa trên cả periodSelection và chartTabSelection
+                                // Chọn biểu đồ
                                 if viewModel.periodSelection == 0 {
                                     if viewModel.chartTabSelection == 0 {
                                         PieChartView(data: viewModel.monthlyExpensePieData, animateChart: animateChart)
@@ -179,12 +174,9 @@ struct DashboardScreen: View {
                         .contentShape(Rectangle())
                         .gesture(dragGesture)
                     }
-                    // !!! QUAN TRỌNG: ĐIỂM THAY ĐỔI LỚN LÀ Ở ĐÂY !!!
-                    // Cập nhật navigationDestination để kiểm tra periodSelection
                     .navigationDestination(for: CategorySummary.self) { categorySummary in
                         
                         if viewModel.periodSelection == 0 {
-                            // Điều hướng tới màn hình chi tiết THÁNG
                             MonthlyCategoryStatisticScreen(
                                 viewModel: MonthlyCategoryStatisticViewModel(
                                     categorySummary: categorySummary,
@@ -194,7 +186,6 @@ struct DashboardScreen: View {
                                 )
                             )
                         } else {
-                            // Điều hướng tới màn hình chi tiết NĂM
                             YearlyCategoryStatisticScreen(
                                 viewModel: YearlyCategoryStatisticViewModel(
                                     categorySummary: categorySummary,
@@ -209,7 +200,9 @@ struct DashboardScreen: View {
                     }
                 )
                 .onAppear {
-                    viewModel.refreshData()
+                    DispatchQueue.main.async { // <--- Thêm dòng này
+                        viewModel.refreshData()
+                    } // <--- Thêm dòng này
                     triggerChartAnimation()
                 }
                 .sheet(isPresented: $isShowingMonthYearPicker) {
@@ -250,7 +243,7 @@ struct DataDisplayView: View {
                 .transition(.opacity)
             } else {
                 VStack {
-                    Text("Không có dữ liệu.")
+                    Text("common_no_data")
                         .padding(.top, 50)
                         .foregroundColor(.secondary)
                     Spacer()
@@ -271,6 +264,8 @@ struct DateNavigatorView: View {
     let onPrevious: () -> Void
     let onNext: () -> Void
     let onTapCenter: () -> Void
+    
+    @EnvironmentObject var languageSettings: LanguageSettings
 
     var body: some View {
         HStack {
@@ -283,7 +278,6 @@ struct DateNavigatorView: View {
             Button(action: onTapCenter) {
                 Text(displayDate)
                     .font(.headline)
-                    .frame(minWidth: 100)
             }
             .foregroundColor(.primary)
             Spacer()
@@ -309,13 +303,13 @@ struct SummaryCardView: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
-                SummaryItem(title: "Chi tiêu", amount: -expense, color: expenseColor)
+                SummaryItem(title: "common_expense", amount: -expense, color: expenseColor)
                 Spacer()
-                SummaryItem(title: "Thu nhập", amount: income, color: incomeColor, alignment: .trailing)
+                SummaryItem(title: "common_income", amount: income, color: incomeColor, alignment: .trailing)
             }
             Divider()
             HStack {
-                Text("Thu chi")
+                Text("dashboard_net_balance")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -328,7 +322,7 @@ struct SummaryCardView: View {
     }
 
     struct SummaryItem: View {
-        var title: String
+        var title: LocalizedStringKey
         var amount: Double
         var color: Color
         var alignment: HorizontalAlignment = .leading
@@ -355,7 +349,7 @@ struct PieChartView: View {
         VStack(alignment: .leading, spacing: 12) {
             Chart(data) { item in
                 SectorMark(
-                    angle: .value("Tổng", item.total),
+                    angle: .value(Text("common_total_amount"), item.total),
                     innerRadius: .ratio(0.5)
                 )
                 .foregroundStyle(item.color)
@@ -401,7 +395,8 @@ struct CategorySummaryRow: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(item.name)
+                // Dịch tên Category Summary
+                Text(LocalizedStringKey(item.name))
                     .font(.system(.headline, design: .rounded))
                     .foregroundColor(.primary)
             
@@ -430,6 +425,7 @@ struct CategorySummaryRow: View {
     }
 }
 
+
 // MARK: - Picker Sheet Views
 struct MonthYearPickerView: View {
     @Binding var selectedMonth: Int
@@ -439,21 +435,21 @@ struct MonthYearPickerView: View {
     var body: some View {
         VStack {
             HStack {
-                Button("Bỏ qua") { dismiss() }
+                Button(action: { dismiss() }) { Text("common_skip") }
                 Spacer()
-                Button("OK") { dismiss() }
+                Button(action: { dismiss() }) { Text("alert_button_ok") }
             }
             .padding()
 
             HStack {
-                Picker("Tháng", selection: $selectedMonth) {
+                Picker("common_month", selection: $selectedMonth) {
                     ForEach(1...12, id: \.self) { month in
-                        Text("tháng \(month)").tag(month)
+                        Text(String.localizedStringWithFormat(NSLocalizedString("common_month_prefix", comment: ""), "\(month)")).tag(month)
                     }
                 }
                 .pickerStyle(.wheel)
 
-                Picker("Năm", selection: $selectedYear) {
+                Picker("common_year", selection: $selectedYear) {
                     ForEach(2020...2030, id: \.self) { year in
                         Text(String(format: "%d", year)).tag(year)
                     }
@@ -472,13 +468,13 @@ struct YearPickerView: View {
     var body: some View {
         VStack {
             HStack {
-                Button("Bỏ qua") { dismiss() }
+                Button(action: { dismiss() }) { Text("common_skip") }
                 Spacer()
-                Button("OK") { dismiss() }
+                Button(action: { dismiss() }) { Text("alert_button_ok") }
             }
             .padding()
 
-            Picker("Năm", selection: $selectedYear) {
+            Picker("common_year", selection: $selectedYear) {
                 ForEach(2020...2030, id: \.self) { year in
                     Text(String(format: "%d", year)).tag(year)
                 }

@@ -20,8 +20,6 @@ class TransactionViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         // --- HẾT SỬA LỖI ---
-            
-        repository.fetchTransactions()
     }
     
     func fetchTransactions() {

@@ -1,278 +1,278 @@
-import SwiftUI
-import CoreData
-
-// MARK: - ContentView (Đã sửa)
-struct TaoDuLieuMau: View {
-    @Environment(\.managedObjectContext) private var context
-    
-    // State cho TabBar (Giữ nguyên)
-    @State private var tabSelection: Int = 1
-    @Namespace private var animation
-    
-    // ViewModel cho màn hình Add (Giữ nguyên)
-    @StateObject private var transactionFormViewModel = TransactionFormViewModel()
-    
-    // --- Dữ liệu mẫu cho Category (Giữ nguyên) ---
-    // *** Lưu ý: Chúng ta sẽ dùng KEY để lưu vào DB ***
-    let defaultExpenses: [(nameKey: String, iconName: String)] = [ // Đổi 'name' thành 'nameKey'
-        ("default_category_food", "fork.knife"),
-        ("default_category_daily_spending", "cart.fill"),
-        ("default_category_clothing", "tshirt.fill"),
-        ("default_category_cosmetics", "hand.raised.fingers.spread.fill"),
-        ("default_category_party", "party.popper.fill"),
-        ("default_category_medical", "pills.fill"),
-        ("default_category_education", "graduationcap.fill"),
-        ("default_category_electricity", "bolt.fill"),
-        ("default_category_transport", "bus.fill"),
-        ("default_category_communication", "phone.fill"),
-        ("default_category_housing", "house.fill")
-    ]
-    
-    let defaultIncomes: [(nameKey: String, iconName: String)] = [ // Đổi 'name' thành 'nameKey'
-        ("default_category_salary", "banknote.fill"),
-        ("default_category_allowance", "person.3.fill"),
-        ("default_category_bonus", "dollarsign.circle.fill"),
-        ("default_category_side_income", "lightbulb.fill"),
-        ("default_category_investment", "chart.line.uptrend.xyaxis"),
-        ("default_category_temporary_income", "briefcase.fill")
-    ]
-    
-    init() {
-        UITabBar.appearance().isHidden = true
-    }
-    
-    private let tabBarHeight: CGFloat = 80
-
-    // --- GIAO DIỆN CHÍNH CỦA APP ---
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            // Nội dung chính theo tab
-            Group {
-                switch tabSelection {
-                case 1:
-                    HomeScreen()
-                        .padding(.bottom, tabBarHeight)
-                case 2:
-                    // --- SỬA ĐỔI: Chuyển CategoryListScreen sang tab 2 ---
-                    CategoryListScreen()
-                        .padding(.bottom, tabBarHeight)
-                    // --- KẾT THÚC SỬA ĐỔI ---
-                case 3:
-                    TransactionAddScreen()
-                        .padding(.bottom, tabBarHeight)
-                case 4:
-                    DashboardScreen()
-                        .padding(.bottom, tabBarHeight)
-                case 5:
-                    SettingScreen()
-                        .padding(.bottom, tabBarHeight)
-                default:
-                    HomeScreen()
-                        .padding(.bottom, tabBarHeight)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemGroupedBackground))
-            .environmentObject(transactionFormViewModel) // Truyền ViewModel vào môi trường
-            
-            // TabBar tùy chỉnh
-            CustomTabBar(tabSelection: $tabSelection, animation: animation)
-        }
-        .ignoresSafeArea(.container, edges: .bottom)
-        .ignoresSafeArea(.keyboard, edges: .bottom)
-        .onAppear {
-            // --- GỌI HÀM SEED Ở ĐÂY ---
-            // Chạy các hàm seed khi View chính xuất hiện lần đầu
-            // Các hàm này sẽ tự kiểm tra để không chạy lại nếu dữ liệu đã tồn tại
-            
-            // 1. Tạo Category trước (lưu KEY)
-            seedDefaultCategoriesIfNeeded(context: context)
-            
-            // 2. Tạo Transaction (sẽ dùng Category ở bước 1)
-            seedSampleTransactionsIfNeeded(context: context)
-            // --- KẾT THÚC GỌI HÀM SEED ---
-        }
-    }
-
-    // --- HÀM SEED CATEGORY (Đã sửa để lưu KEY) ---
-    func seedDefaultCategoriesIfNeeded(context: NSManagedObjectContext) {
-        let fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
-        
-        do {
-            let existingCount = try context.count(for: fetchRequest)
-            guard existingCount == 0 else {
-                // print("✅ Dữ liệu Category đã tồn tại, không cần seed.") // Bỏ comment nếu muốn thấy log
-                return
-            }
-        } catch {
-            print("❌ Lỗi khi kiểm tra Category: \(error)")
-            return
-        }
-
-        print("🔄 Bắt đầu seed dữ liệu Category (lưu key)...")
-        // Lưu 'nameKey' (khóa) trực tiếp vào database
-        for categoryInfo in defaultExpenses {
-            let cat = Category(context: context)
-            cat.id = UUID()
-            cat.name = categoryInfo.nameKey // <-- LƯU KEY
-            cat.type = "expense"
-            cat.iconName = categoryInfo.iconName
-            cat.createAt = Date()
-            cat.updateAt = Date()
-        }
-
-        for categoryInfo in defaultIncomes {
-            let cat = Category(context: context)
-            cat.id = UUID()
-            cat.name = categoryInfo.nameKey // <-- LƯU KEY
-            cat.type = "income"
-            cat.iconName = categoryInfo.iconName
-            cat.createAt = Date()
-            cat.updateAt = Date()
-        }
-
-        do {
-            try context.save()
-            print("✅ Đã seed thành công các category mặc định (đã lưu key).")
-        } catch {
-            print("❌ Lỗi khi lưu các category mặc định: \(error)")
-        }
-    }
-
-    // --- HÀM SEED TRANSACTION (Đã sửa để dùng KEY khi lấy Category) ---
-    func seedSampleTransactionsIfNeeded(context: NSManagedObjectContext) {
-        let transactionFetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
-        
-        do {
-            let existingCount = try context.count(for: transactionFetchRequest)
-            guard existingCount == 0 else {
-                // print("✅ Dữ liệu Transaction đã tồn tại, không cần seed.") // Bỏ comment nếu muốn thấy log
-                return
-            }
-        } catch {
-            print("❌ Lỗi khi kiểm tra Transaction: \(error)")
-            return
-        }
-
-        // 1. Lấy tất cả các Category đã tạo (chứa KEY trong 'name')
-        let categoryFetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
-        guard let allCategories = try? context.fetch(categoryFetchRequest), !allCategories.isEmpty else {
-            print("❌ Không tìm thấy Category để tạo Transaction. Hãy đảm bảo seed Category trước.")
-            return
-        }
-        
-        let expenseCategories = allCategories.filter { $0.type == "expense" }
-        let incomeCategories = allCategories.filter { $0.type == "income" }
-        
-        guard !expenseCategories.isEmpty, !incomeCategories.isEmpty else {
-            print("❌ Thiếu danh mục thu nhập hoặc chi tiêu.")
-            return
-        }
-        
-        // --- SỬA ĐỔI: Tìm category 'Tiền lương' bằng KEY ---
-        let salaryCategory = incomeCategories.first { $0.name == "default_category_salary" }
-        // --- KẾT THÚC SỬA ĐỔI ---
-
-        let calendar = Calendar.current
-        let endDate = Date() // Ngày hôm nay
-        guard let startDate = calendar.date(byAdding: .year, value: -3, to: endDate) else {
-            print("❌ Không thể tính toán ngày bắt đầu.")
-            return
-        }
-
-        var currentDate = startDate
-        // --- SỬA ĐỔI: Dùng key cho sample titles/notes nếu muốn ---
-        // Hoặc giữ nguyên Tiếng Việt cũng không sao vì đây là dữ liệu mẫu
-        let sampleNotes = ["Cà phê với bạn", "Ăn trưa văn phòng", "Mua sắm Shopee", "Thanh toán hoá đơn điện", "Xem phim cuối tuần", "Đổ xăng", "Đi siêu thị"]
-        let sampleTitles = ["default_category_food", "default_category_transport", "default_category_daily_spending", "default_category_clothing"] // Ví dụ dùng key
-
-        print("🔄 Bắt đầu seed dữ liệu giao dịch 3 năm...")
-
-        // 2. Lặp qua từng tháng trong 3 năm
-        while currentDate <= endDate {
-            let currentMonth = calendar.component(.month, from: currentDate)
-            let currentYear = calendar.component(.year, from: currentDate)
-            
-            // --- Tạo 1-3 giao dịch THU NHẬP mỗi tháng ---
-            let incomeCount = Int.random(in: 1...3)
-            for i in 0..<incomeCount {
-                guard let randomCategory = incomeCategories.randomElement() else { continue }
-                
-                // --- SỬA ĐỔI: Kiểm tra category 'Tiền lương' bằng KEY ---
-                let isSalary = (randomCategory.name == "default_category_salary" && i == 0)
-                let randomDay = isSalary ? 5 : Int.random(in: 1...28) // Giả lập ngày nhận lương
-                // --- KẾT THÚC SỬA ĐỔI ---
-                
-                guard let transactionDate = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: randomDay)) else { continue }
-                
-                let amount: Double
-                if isSalary {
-                    amount = Double.random(in: 15_000_000...30_000_000) // Lương cao hơn
-                } else {
-                    amount = Double.random(in: 500_000...3_000_000) // Thu nhập phụ
-                }
-
-                createTransaction(
-                    context: context,
-                    category: randomCategory,
-                    date: transactionDate,
-                    amount: amount,
-                    // --- SỬA ĐỔI: Dùng key làm title (sẽ được dịch khi hiển thị) ---
-                    title: randomCategory.name ?? "common_income", // Dùng key của category
-                    // --- KẾT THÚC SỬA ĐỔI ---
-                    note: "Thu nhập tháng \(currentMonth)" // Giữ nguyên hoặc dùng key
-                )
-            }
-            
-            // --- Tạo 15-30 giao dịch CHI TIÊU mỗi tháng ---
-            let expenseCount = Int.random(in: 15...30)
-            for _ in 0..<expenseCount {
-                guard let randomCategory = expenseCategories.randomElement() else { continue }
-                
-                let randomDay = Int.random(in: 1...28) // Lấy ngày ngẫu nhiên trong tháng (an toàn 28)
-                guard let transactionDate = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: randomDay)) else { continue }
-                
-                let amount = Double.random(in: 10_000...1_500_000) // Chi tiêu ngẫu nhiên
-                
-                createTransaction(
-                    context: context,
-                    category: randomCategory,
-                    date: transactionDate,
-                    amount: amount,
-                    // --- SỬA ĐỔI: Dùng key làm title (sẽ được dịch khi hiển thị) ---
-                    title: sampleTitles.randomElement() ?? "common_expense", // Lấy title ngẫu nhiên từ key
-                    // --- KẾT THÚC SỬA ĐỔI ---
-                    note: sampleNotes.randomElement() ?? "Chi tiêu lặt vặt" // Giữ nguyên hoặc dùng key
-                )
-            }
-
-            // Di chuyển đến tháng tiếp theo
-            guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: currentDate) else { break }
-            currentDate = nextMonth
-        }
-        
-        // 3. Lưu tất cả thay đổi vào Context
-        do {
-            try context.save()
-            print("✅ Đã seed thành công dữ liệu Transaction trong 3 năm.")
-        } catch {
-            print("❌ Lỗi khi lưu dữ liệu Transaction: \(error)")
-            // Xử lý lỗi, có thể rollback
-            context.rollback()
-        }
-    }
-    
-    // --- Hàm trợ giúp tạo 1 Transaction (Giữ nguyên) ---
-    private func createTransaction(context: NSManagedObjectContext, category: Category, date: Date, amount: Double, title: String, note: String?) {
-        let newTransaction = Transaction(context: context)
-        newTransaction.id = UUID()
-        newTransaction.date = date
-        newTransaction.createAt = date // Giả lập ngày tạo
-        newTransaction.updateAt = date // Giả lập ngày cập nhật
-        newTransaction.type = category.type // QUAN TRỌNG: Đồng bộ type
-        newTransaction.amount = amount
-        newTransaction.title = title // Lưu KEY vào đây
-        newTransaction.note = note
-        newTransaction.category = category // QUAN TRỌNG: Liên kết với Category
-    }
-}
+//import SwiftUI
+//import CoreData
+//
+//// MARK: - ContentView (Đã sửa)
+//struct ContentView: View {
+//    @Environment(\.managedObjectContext) private var context
+//    
+//    // State cho TabBar (Giữ nguyên)
+//    @State private var tabSelection: Int = 1
+//    @Namespace private var animation
+//    
+//    // ViewModel cho màn hình Add (Giữ nguyên)
+//    @StateObject private var transactionFormViewModel = TransactionFormViewModel()
+//    
+//    // --- Dữ liệu mẫu cho Category (Giữ nguyên) ---
+//    // *** Lưu ý: Chúng ta sẽ dùng KEY để lưu vào DB ***
+//    let defaultExpenses: [(nameKey: String, iconName: String)] = [ // Đổi 'name' thành 'nameKey'
+//        ("default_category_food", "fork.knife"),
+//        ("default_category_daily_spending", "cart.fill"),
+//        ("default_category_clothing", "tshirt.fill"),
+//        ("default_category_cosmetics", "hand.raised.fingers.spread.fill"),
+//        ("default_category_party", "party.popper.fill"),
+//        ("default_category_medical", "pills.fill"),
+//        ("default_category_education", "graduationcap.fill"),
+//        ("default_category_electricity", "bolt.fill"),
+//        ("default_category_transport", "bus.fill"),
+//        ("default_category_communication", "phone.fill"),
+//        ("default_category_housing", "house.fill")
+//    ]
+//    
+//    let defaultIncomes: [(nameKey: String, iconName: String)] = [ // Đổi 'name' thành 'nameKey'
+//        ("default_category_salary", "banknote.fill"),
+//        ("default_category_allowance", "person.3.fill"),
+//        ("default_category_bonus", "dollarsign.circle.fill"),
+//        ("default_category_side_income", "lightbulb.fill"),
+//        ("default_category_investment", "chart.line.uptrend.xyaxis"),
+//        ("default_category_temporary_income", "briefcase.fill")
+//    ]
+//    
+//    init() {
+//        UITabBar.appearance().isHidden = true
+//    }
+//    
+//    private let tabBarHeight: CGFloat = 80
+//
+//    // --- GIAO DIỆN CHÍNH CỦA APP ---
+//    var body: some View {
+//        ZStack(alignment: .bottom) {
+//            // Nội dung chính theo tab
+//            Group {
+//                switch tabSelection {
+//                case 1:
+//                    HomeScreen()
+//                        .padding(.bottom, tabBarHeight)
+//                case 2:
+//                    // --- SỬA ĐỔI: Chuyển CategoryListScreen sang tab 2 ---
+//                    CategoryListScreen()
+//                        .padding(.bottom, tabBarHeight)
+//                    // --- KẾT THÚC SỬA ĐỔI ---
+//                case 3:
+//                    TransactionAddScreen()
+//                        .padding(.bottom, tabBarHeight)
+//                case 4:
+//                    DashboardScreen()
+//                        .padding(.bottom, tabBarHeight)
+//                case 5:
+//                    SettingScreen()
+//                        .padding(.bottom, tabBarHeight)
+//                default:
+//                    HomeScreen()
+//                        .padding(.bottom, tabBarHeight)
+//                }
+//            }
+//            .frame(maxWidth: .infinity, maxHeight: .infinity)
+//            .background(Color(.systemGroupedBackground))
+//            .environmentObject(transactionFormViewModel) // Truyền ViewModel vào môi trường
+//            
+//            // TabBar tùy chỉnh
+//            CustomTabBar(tabSelection: $tabSelection, animation: animation)
+//        }
+//        .ignoresSafeArea(.container, edges: .bottom)
+//        .ignoresSafeArea(.keyboard, edges: .bottom)
+//        .onAppear {
+//            // --- GỌI HÀM SEED Ở ĐÂY ---
+//            // Chạy các hàm seed khi View chính xuất hiện lần đầu
+//            // Các hàm này sẽ tự kiểm tra để không chạy lại nếu dữ liệu đã tồn tại
+//            
+//            // 1. Tạo Category trước (lưu KEY)
+//            seedDefaultCategoriesIfNeeded(context: context)
+//            
+//            // 2. Tạo Transaction (sẽ dùng Category ở bước 1)
+//            seedSampleTransactionsIfNeeded(context: context)
+//            // --- KẾT THÚC GỌI HÀM SEED ---
+//        }
+//    }
+//
+//    // --- HÀM SEED CATEGORY (Đã sửa để lưu KEY) ---
+//    func seedDefaultCategoriesIfNeeded(context: NSManagedObjectContext) {
+//        let fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
+//        
+//        do {
+//            let existingCount = try context.count(for: fetchRequest)
+//            guard existingCount == 0 else {
+//                // print("✅ Dữ liệu Category đã tồn tại, không cần seed.") // Bỏ comment nếu muốn thấy log
+//                return
+//            }
+//        } catch {
+//            print("❌ Lỗi khi kiểm tra Category: \(error)")
+//            return
+//        }
+//
+//        print("🔄 Bắt đầu seed dữ liệu Category (lưu key)...")
+//        // Lưu 'nameKey' (khóa) trực tiếp vào database
+//        for categoryInfo in defaultExpenses {
+//            let cat = Category(context: context)
+//            cat.id = UUID()
+//            cat.name = categoryInfo.nameKey // <-- LƯU KEY
+//            cat.type = "expense"
+//            cat.iconName = categoryInfo.iconName
+//            cat.createAt = Date()
+//            cat.updateAt = Date()
+//        }
+//
+//        for categoryInfo in defaultIncomes {
+//            let cat = Category(context: context)
+//            cat.id = UUID()
+//            cat.name = categoryInfo.nameKey // <-- LƯU KEY
+//            cat.type = "income"
+//            cat.iconName = categoryInfo.iconName
+//            cat.createAt = Date()
+//            cat.updateAt = Date()
+//        }
+//
+//        do {
+//            try context.save()
+//            print("✅ Đã seed thành công các category mặc định (đã lưu key).")
+//        } catch {
+//            print("❌ Lỗi khi lưu các category mặc định: \(error)")
+//        }
+//    }
+//
+//    // --- HÀM SEED TRANSACTION (Đã sửa để dùng KEY khi lấy Category) ---
+//    func seedSampleTransactionsIfNeeded(context: NSManagedObjectContext) {
+//        let transactionFetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+//        
+//        do {
+//            let existingCount = try context.count(for: transactionFetchRequest)
+//            guard existingCount == 0 else {
+//                // print("✅ Dữ liệu Transaction đã tồn tại, không cần seed.") // Bỏ comment nếu muốn thấy log
+//                return
+//            }
+//        } catch {
+//            print("❌ Lỗi khi kiểm tra Transaction: \(error)")
+//            return
+//        }
+//
+//        // 1. Lấy tất cả các Category đã tạo (chứa KEY trong 'name')
+//        let categoryFetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
+//        guard let allCategories = try? context.fetch(categoryFetchRequest), !allCategories.isEmpty else {
+//            print("❌ Không tìm thấy Category để tạo Transaction. Hãy đảm bảo seed Category trước.")
+//            return
+//        }
+//        
+//        let expenseCategories = allCategories.filter { $0.type == "expense" }
+//        let incomeCategories = allCategories.filter { $0.type == "income" }
+//        
+//        guard !expenseCategories.isEmpty, !incomeCategories.isEmpty else {
+//            print("❌ Thiếu danh mục thu nhập hoặc chi tiêu.")
+//            return
+//        }
+//        
+//        // --- SỬA ĐỔI: Tìm category 'Tiền lương' bằng KEY ---
+//        let salaryCategory = incomeCategories.first { $0.name == "default_category_salary" }
+//        // --- KẾT THÚC SỬA ĐỔI ---
+//
+//        let calendar = Calendar.current
+//        let endDate = Date() // Ngày hôm nay
+//        guard let startDate = calendar.date(byAdding: .year, value: -3, to: endDate) else {
+//            print("❌ Không thể tính toán ngày bắt đầu.")
+//            return
+//        }
+//
+//        var currentDate = startDate
+//        // --- SỬA ĐỔI: Dùng key cho sample titles/notes nếu muốn ---
+//        // Hoặc giữ nguyên Tiếng Việt cũng không sao vì đây là dữ liệu mẫu
+//        let sampleNotes = ["Cà phê với bạn", "Ăn trưa văn phòng", "Mua sắm Shopee", "Thanh toán hoá đơn điện", "Xem phim cuối tuần", "Đổ xăng", "Đi siêu thị"]
+//        let sampleTitles = ["default_category_food", "default_category_transport", "default_category_daily_spending", "default_category_clothing"] // Ví dụ dùng key
+//
+//        print("🔄 Bắt đầu seed dữ liệu giao dịch 3 năm...")
+//
+//        // 2. Lặp qua từng tháng trong 3 năm
+//        while currentDate <= endDate {
+//            let currentMonth = calendar.component(.month, from: currentDate)
+//            let currentYear = calendar.component(.year, from: currentDate)
+//            
+//            // --- Tạo 1-3 giao dịch THU NHẬP mỗi tháng ---
+//            let incomeCount = Int.random(in: 1...3)
+//            for i in 0..<incomeCount {
+//                guard let randomCategory = incomeCategories.randomElement() else { continue }
+//                
+//                // --- SỬA ĐỔI: Kiểm tra category 'Tiền lương' bằng KEY ---
+//                let isSalary = (randomCategory.name == "default_category_salary" && i == 0)
+//                let randomDay = isSalary ? 5 : Int.random(in: 1...28) // Giả lập ngày nhận lương
+//                // --- KẾT THÚC SỬA ĐỔI ---
+//                
+//                guard let transactionDate = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: randomDay)) else { continue }
+//                
+//                let amount: Double
+//                if isSalary {
+//                    amount = Double.random(in: 15_000_000...30_000_000) // Lương cao hơn
+//                } else {
+//                    amount = Double.random(in: 500_000...3_000_000) // Thu nhập phụ
+//                }
+//
+//                createTransaction(
+//                    context: context,
+//                    category: randomCategory,
+//                    date: transactionDate,
+//                    amount: amount,
+//                    // --- SỬA ĐỔI: Dùng key làm title (sẽ được dịch khi hiển thị) ---
+//                    title: randomCategory.name ?? "common_income", // Dùng key của category
+//                    // --- KẾT THÚC SỬA ĐỔI ---
+//                    note: "Thu nhập tháng \(currentMonth)" // Giữ nguyên hoặc dùng key
+//                )
+//            }
+//            
+//            // --- Tạo 15-30 giao dịch CHI TIÊU mỗi tháng ---
+//            let expenseCount = Int.random(in: 15...30)
+//            for _ in 0..<expenseCount {
+//                guard let randomCategory = expenseCategories.randomElement() else { continue }
+//                
+//                let randomDay = Int.random(in: 1...28) // Lấy ngày ngẫu nhiên trong tháng (an toàn 28)
+//                guard let transactionDate = calendar.date(from: DateComponents(year: currentYear, month: currentMonth, day: randomDay)) else { continue }
+//                
+//                let amount = Double.random(in: 10_000...1_500_000) // Chi tiêu ngẫu nhiên
+//                
+//                createTransaction(
+//                    context: context,
+//                    category: randomCategory,
+//                    date: transactionDate,
+//                    amount: amount,
+//                    // --- SỬA ĐỔI: Dùng key làm title (sẽ được dịch khi hiển thị) ---
+//                    title: sampleTitles.randomElement() ?? "common_expense", // Lấy title ngẫu nhiên từ key
+//                    // --- KẾT THÚC SỬA ĐỔI ---
+//                    note: sampleNotes.randomElement() ?? "Chi tiêu lặt vặt" // Giữ nguyên hoặc dùng key
+//                )
+//            }
+//
+//            // Di chuyển đến tháng tiếp theo
+//            guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: currentDate) else { break }
+//            currentDate = nextMonth
+//        }
+//        
+//        // 3. Lưu tất cả thay đổi vào Context
+//        do {
+//            try context.save()
+//            print("✅ Đã seed thành công dữ liệu Transaction trong 3 năm.")
+//        } catch {
+//            print("❌ Lỗi khi lưu dữ liệu Transaction: \(error)")
+//            // Xử lý lỗi, có thể rollback
+//            context.rollback()
+//        }
+//    }
+//    
+//    // --- Hàm trợ giúp tạo 1 Transaction (Giữ nguyên) ---
+//    private func createTransaction(context: NSManagedObjectContext, category: Category, date: Date, amount: Double, title: String, note: String?) {
+//        let newTransaction = Transaction(context: context)
+//        newTransaction.id = UUID()
+//        newTransaction.date = date
+//        newTransaction.createAt = date // Giả lập ngày tạo
+//        newTransaction.updateAt = date // Giả lập ngày cập nhật
+//        newTransaction.type = category.type // QUAN TRỌNG: Đồng bộ type
+//        newTransaction.amount = amount
+//        newTransaction.title = title // Lưu KEY vào đây
+//        newTransaction.note = note
+//        newTransaction.category = category // QUAN TRỌNG: Liên kết với Category
+//    }
+//}
