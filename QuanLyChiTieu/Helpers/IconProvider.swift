@@ -112,7 +112,8 @@ struct IconProvider {
       IconInfo(iconName: "building.2.fill", color: .gray),
       IconInfo(iconName: "sailboat.fill", color: .blue),
       IconInfo(iconName: "cross.vial.fill", color: .mint),
-      IconInfo(iconName: "creditcard.and.123", color: .purple)
+      IconInfo(iconName: "creditcard.and.123", color: .purple),
+      IconInfo(iconName: "target", color: .blue)
     ]
 
     static func color(for iconName: String?) -> Color {

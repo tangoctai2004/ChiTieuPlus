@@ -140,6 +140,27 @@
 "default_category_side_income" = "Thu nhập phụ";
 "default_category_investment" = "Đầu tư";
 "default_category_temporary_income" = "Thu nhập tạm thời";
+"default_category_savings_goal" = "Mục tiêu tiết kiệm";
+
+// MARK: - Savings Goals
+"savings_goal_completed_notification_title" = "Chúc mừng!";
+"savings_goal_completed_notification_body" = "Bạn đã hoàn thành mục tiêu tiết kiệm %@";
+"savings_goal_complete_button" = "Hoàn thành";
+"savings_goal_extend_button" = "Gia hạn thời gian";
+"savings_goal_extend_title" = "Gia hạn mục tiêu";
+"savings_goal_expired_notification_title" = "Mục tiêu đã hết hạn";
+"savings_goal_expired_notification_body" = "Mục tiêu \"%@\" đã hết hạn. Bạn có muốn gia hạn không?";
+"savings_goal_expiring_7_days_title" = "Mục tiêu sắp hết hạn";
+"savings_goal_expiring_7_days_body" = "Mục tiêu \"%@\" còn 7 ngày nữa sẽ hết hạn";
+"savings_goal_expiring_3_days_title" = "Mục tiêu sắp hết hạn";
+"savings_goal_expiring_3_days_body" = "Mục tiêu \"%@\" còn 3 ngày nữa sẽ hết hạn";
+"savings_goal_expiring_1_day_title" = "Mục tiêu sắp hết hạn";
+"savings_goal_expiring_1_day_body" = "Mục tiêu \"%@\" còn 1 ngày nữa sẽ hết hạn";
+"savings_goal_extend_alert_title" = "Gia hạn mục tiêu";
+"savings_goal_extend_alert_message" = "Bạn có muốn gia hạn mục tiêu \"%@\" không?";
+"savings_goal_extend_alert_yes" = "Gia hạn";
+"savings_goal_extend_alert_no" = "Không";
+"savings_goal_new_target_date_label" = "Ngày hoàn thành mục tiêu mới";
 
 // MARK: - Tabbar Name
 "tabbar_home" = "Trang Chủ";
@@ -163,4 +184,72 @@
 
 //MARK: - Security
 "settings_row_app_lock_pin" = "Cài đặt mã PIN";
-"settings_row_use_faceid" = "Sử dụng FaceID";   
+"settings_row_use_faceid" = "Sử dụng FaceID";
+
+//MARK: - Currency
+"currency_vnd" = "Việt Nam Đồng (VND)";
+"currency_usd" = "US Dollar (USD)";
+
+// MARK: - Budget
+"settings_row_budgets" = "Ngân sách";
+"budget_period_monthly" = "Hàng tháng";
+"budget_period_quarterly" = "Hàng quý";
+"budget_period_yearly" = "Hàng năm";
+"budget_new_title" = "Ngân sách mới";
+"budget_edit_title" = "Chỉnh sửa ngân sách";
+"budget_category_label" = "Danh mục";
+"budget_total_spending" = "Tổng chi tiêu";
+"budget_total_spending_desc" = "Theo dõi tổng chi tiêu của tất cả danh mục";
+"budget_amount_label" = "Số tiền ngân sách";
+"budget_period_label" = "Kỳ ngân sách";
+"budget_rollover_label" = "Chuyển số dư sang kỳ mới";
+"budget_rollover_desc" = "Số tiền còn lại sẽ được cộng vào ngân sách kỳ tiếp theo";
+"budget_active_title" = "Ngân sách đang hoạt động";
+"budget_warning_title" = "Cảnh báo ngân sách";
+"budget_exceeded_title" = "Ngân sách đã vượt quá";
+"budget_empty_title" = "Chưa có ngân sách";
+"budget_empty_desc" = "Tạo ngân sách đầu tiên để theo dõi chi tiêu!";
+"budget_delete_title" = "Xóa ngân sách";
+"budget_delete_message" = "Bạn có chắc muốn xóa ngân sách này? Hành động này không thể hoàn tác.";
+"budget_used_label" = "Đã sử dụng";
+"budget_spent_label" = "Đã chi";
+"budget_budget_label" = "Ngân sách";
+"budget_remaining_label" = "Còn lại";
+"budget_exceeded_message" = "Đã vượt quá ngân sách!";
+"budget_days_remaining" = "Còn %d ngày trong kỳ";
+"budget_period_end_today" = "Hôm nay là ngày cuối kỳ";
+"budget_warning_80" = "Đã sử dụng hơn 80% ngân sách";
+"budget_warning_90" = "Đã sử dụng hơn 90% ngân sách";
+"budget_warning_critical" = "Sắp hết ngân sách!";
+"budget_warning_exceeded" = "Đã vượt quá ngân sách!";
+
+// MARK: - Recurring Transactions
+"recurring_frequency_daily" = "Hàng ngày";
+"recurring_frequency_weekly" = "Hàng tuần";
+"recurring_frequency_monthly" = "Hàng tháng";
+"recurring_frequency_yearly" = "Hàng năm";
+"recurring_new_title" = "Giao dịch định kỳ mới";
+"recurring_edit_title" = "Chỉnh sửa giao dịch định kỳ";
+"recurring_title_label" = "Tiêu đề";
+"recurring_type_label" = "Loại giao dịch";
+"recurring_amount_label" = "Số tiền";
+"recurring_category_label" = "Danh mục";
+"recurring_frequency_label" = "Tần suất";
+"recurring_start_date_label" = "Ngày bắt đầu";
+"recurring_end_date_label" = "Ngày kết thúc";
+"recurring_has_end_date_label" = "Có ngày kết thúc";
+"recurring_has_end_date_desc" = "Giao dịch sẽ tự động dừng sau ngày này";
+"recurring_note_label" = "Ghi chú (tùy chọn)";
+"recurring_active_title" = "Giao dịch định kỳ đang hoạt động";
+"recurring_due_title" = "Đã đến hạn";
+"recurring_empty_title" = "Chưa có giao dịch định kỳ";
+"recurring_empty_desc" = "Tạo giao dịch định kỳ đầu tiên để tự động tạo giao dịch!";
+"recurring_delete_title" = "Xóa giao dịch định kỳ";
+"recurring_delete_message" = "Bạn có chắc muốn xóa giao dịch định kỳ này? Hành động này không thể hoàn tác.";
+"recurring_next_due" = "Đến hạn tiếp theo";
+"recurring_overdue" = "Đã quá hạn %d ngày";
+"recurring_today" = "Hôm nay";
+"recurring_days_remaining" = "Còn %d ngày";
+"recurring_due_notification" = "Đã đến hạn - Sẽ được tạo tự động";
+"recurring_end_date_prefix" = "Kết thúc:";
+"settings_row_recurring_transactions" = "Giao dịch định kỳ";   

@@ -4,9 +4,11 @@ import Charts
 
 struct DashboardScreen: View {
     @StateObject private var viewModel = DashboardViewModel()
+    @StateObject private var budgetViewModel = BudgetViewModel()
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
 
-    private let expenseColor = Color.red
-    private let incomeColor = Color.green
+    private let expenseColor = AppColors.expenseColor
+    private let incomeColor = AppColors.incomeColor
 
     @State private var animateChart = false
     @State private var isShowingMonthYearPicker = false
@@ -43,8 +45,8 @@ struct DashboardScreen: View {
 
         let animationTriggerValue = "\(viewModel.periodSelection)-\(viewModel.currentMonthDisplay)-\(viewModel.currentYearDisplay)-\(viewModel.chartTabSelection)"
 
-        NavigationStack {
-            Color(.systemGroupedBackground).ignoresSafeArea()
+        NavigationStack(path: navigationCoordinator.path(for: 4)) {
+            AppColors.groupedBackground.ignoresSafeArea()
                 .overlay(
                     VStack(spacing: 0) {
                         // MARK: - Top Nav
@@ -102,6 +104,24 @@ struct DashboardScreen: View {
                                 )
                                 .padding(.horizontal)
                                 .padding(.top, 8)
+                                
+                                // MARK: - Budget Warnings
+                                if !budgetViewModel.warningBudgets.isEmpty || !budgetViewModel.exceededBudgets.isEmpty {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        if !budgetViewModel.exceededBudgets.isEmpty {
+                                            ForEach(budgetViewModel.exceededBudgets.prefix(2)) { budget in
+                                                BudgetWarningCard(budget: budget)
+                                            }
+                                        }
+                                        if !budgetViewModel.warningBudgets.isEmpty {
+                                            ForEach(budgetViewModel.warningBudgets.prefix(2)) { budget in
+                                                BudgetWarningCard(budget: budget)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.top, 12)
+                                }
 
                                 Picker("", selection: $viewModel.chartTabSelection.animation(.easeInOut(duration: 0.3))) {
                                     Text("common_expense").tag(0)
@@ -126,9 +146,9 @@ struct DashboardScreen: View {
                                     }
                                 }
                             }
-                            .background(Color(.systemBackground))
+                            .background(AppColors.cardBackground)
                             .cornerRadius(20)
-                            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                            .shadow(color: AppColors.shadowColor, radius: 10, x: 0, y: 5)
                             .padding(.horizontal)
                             .padding(.top, 10)
                             .padding(.bottom, 10)
@@ -200,10 +220,23 @@ struct DashboardScreen: View {
                     }
                 )
                 .onAppear {
-                    DispatchQueue.main.async { // <--- Thêm dòng này
+                    DispatchQueue.main.async {
                         viewModel.refreshData()
-                    } // <--- Thêm dòng này
+                    }
+                    budgetViewModel.loadBudgets()
+                    budgetViewModel.updateAllBudgetsSpentAmount()
                     triggerChartAnimation()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("TransactionDidChange"))) { _ in
+                    budgetViewModel.updateAllBudgetsSpentAmount()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("BudgetDidChange"))) { _ in
+                    budgetViewModel.loadBudgets()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("PopToRoot"))) { notification in
+                    if let tab = notification.userInfo?["tab"] as? Int, tab == 4 {
+                        navigationCoordinator.popToRoot(for: 4)
+                    }
                 }
                 .sheet(isPresented: $isShowingMonthYearPicker) {
                     MonthYearPickerView(
@@ -315,7 +348,7 @@ struct SummaryCardView: View {
                 Spacer()
                 Text(AppUtils.formattedCurrency(netBalance))
                     .font(.headline.bold())
-                    .foregroundColor(netBalance >= 0 ? .green : .red)
+                    .foregroundColor(netBalance >= 0 ? AppColors.incomeColor : AppColors.expenseColor)
             }
         }
         .padding()
@@ -419,8 +452,8 @@ struct CategorySummaryRow: View {
         .padding(15)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.primary.opacity(0.1), radius: 8, x: 0, y: 4)
+                .fill(AppColors.cardBackground)
+                .shadow(color: AppColors.cardShadow, radius: 8, x: 0, y: 4)
         )
     }
 }

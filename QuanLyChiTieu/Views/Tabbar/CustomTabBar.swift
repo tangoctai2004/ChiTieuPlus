@@ -12,12 +12,14 @@ struct CustomTabBar: View {
     //MARK: - Properties
     @Binding var tabSelection: Int
     var animation: Namespace.ID
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
     
     private var tabWidth: CGFloat {
         return screenWidth/5
     }
     
     @State private var midPoint: CGFloat = 0.0
+    @State private var previousTabSelection: Int = 1
     
     //MARK: - Content
     var body: some View {
@@ -33,8 +35,21 @@ struct CustomTabBar: View {
                     let isCurrentTab = tabSelection == index+1
                     
                     Button {
+                        let newTab = index + 1
+                        
+                        // Nếu nhấn vào tab đang active, pop về root
+                        if tabSelection == newTab {
+                            navigationCoordinator.popToRoot(for: newTab)
+                            // Gửi notification để các screen tự pop về root
+                            NotificationCenter.default.post(
+                                name: NSNotification.Name("PopToRoot"),
+                                object: nil,
+                                userInfo: ["tab": newTab]
+                            )
+                        }
+                        
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.7, blendDuration: 0.7)) {
-                            tabSelection = index + 1
+                            tabSelection = newTab
                             midPoint = tabWidth * (-CGFloat(tabSelection-3))
                         }
                         

@@ -6,6 +6,7 @@ struct TransactionAddScreen: View {
     @EnvironmentObject var viewModel: TransactionFormViewModel
     @StateObject private var categoryVM = CategoryViewModel()
     @StateObject private var speechService = SpeechRecognitionService() // <-- THÊM MỚI
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
     @State private var showSuccessToast = false
 
     private var canSave: Bool {
@@ -13,7 +14,7 @@ struct TransactionAddScreen: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: navigationCoordinator.path(for: 3)) {
             ZStack {
                 VStack(spacing: 0) {
                     CustomAddHeaderView(
@@ -131,13 +132,13 @@ struct TransactionFormFields: View {
                 TextField("0", text: $viewModel.formattedAmount)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing).font(.subheadline)
-                    .foregroundColor(viewModel.type == "expense" ? .red : .green)
+                    .foregroundColor(viewModel.type == "expense" ? AppColors.expenseColor : AppColors.incomeColor)
                     .onChange(of: viewModel.formattedAmount) { newValue in
                         let digits = newValue.filter { "0123456789".contains($0) }
                         viewModel.rawAmount = digits
                         viewModel.formattedAmount = AppUtils.formatCurrencyInput(digits)
                     }
-                Text("đ").foregroundColor(.secondary)
+                Text(CurrencySettings.shared.currentCurrency.symbol).foregroundColor(.secondary)
             }.padding()
         }
     }
@@ -268,7 +269,7 @@ struct SuccessToastView: View {
         VStack(spacing: 15) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 70))
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColors.incomeColor)
                 .symbolEffect(.bounce.down.byLayer, value: true)
             Text("toast_add_success")
                 .font(.title3)

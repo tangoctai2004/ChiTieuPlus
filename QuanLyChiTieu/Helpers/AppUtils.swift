@@ -36,14 +36,25 @@ struct AppUtils{
         }
     }
     
-    static func formattedCurrency(_ amount: Double) -> String{
+    static func formattedCurrency(_ amount: Double, currencySettings: CurrencySettings? = nil) -> String{
+        let currencySettings = currencySettings ?? CurrencySettings.shared
+        let convertedAmount = currencySettings.convertFromVnd(amount)
+        let currency = currencySettings.currentCurrency
+        
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = "."
-        formatter.maximumFractionDigits = 0
         
-        let numberString = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
-        return "\(numberString) vnđ"
+        // Với USD, hiển thị 2 chữ số thập phân. Với VND, không có số thập phân
+        if currency == .usd {
+            formatter.minimumFractionDigits = 2
+            formatter.maximumFractionDigits = 2
+        } else {
+            formatter.maximumFractionDigits = 0
+        }
+        
+        let numberString = formatter.string(from: NSNumber(value: convertedAmount)) ?? "\(convertedAmount)"
+        return "\(numberString) \(currency.symbol)"
     }
 }
  

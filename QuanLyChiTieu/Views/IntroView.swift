@@ -9,7 +9,11 @@ struct IntroView: View {
     // 1. SAO CHÉP BIẾN GRADIENT TỪ HOMESCREEN VÀO ĐÂY
     private var gradient: LinearGradient {
         LinearGradient(
-            colors: [.red, .purple],
+            colors: [
+                AppColors.expenseColor,
+                Color(light: Color(red: 0.6, green: 0.2, blue: 0.8),
+                      dark: Color(red: 0.7, green: 0.3, blue: 0.9))
+            ],
             startPoint: .leading,
             endPoint: .trailing
         )

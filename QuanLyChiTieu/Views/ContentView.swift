@@ -13,6 +13,7 @@ struct ContentView: View {
     @Namespace private var animation
     
     @StateObject private var transactionFormViewModel = TransactionFormViewModel()
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
     
     init() {
         UITabBar.appearance().isHidden = true
@@ -48,7 +49,7 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(.systemGroupedBackground))
+                .background(AppColors.groupedBackground)
                 .environmentObject(transactionFormViewModel)
                 .environmentObject(authManager) // <-- Chia sẻ AuthManager
                 
@@ -106,6 +107,8 @@ struct ContentView: View {
             if !authManager.isUnlocked {
                 authManager.authenticate()
             }
+            // Xử lý recurring transactions khi app khởi động
+            DataRepository.shared.processDueRecurringTransactions()
         }
         .onChange(of: scenePhase) { newPhase in
             // Nếu app bị đưa ra ngoài (vd: nhấn Home)
@@ -113,8 +116,12 @@ struct ContentView: View {
                 authManager.lockApp() // Khóa app
             }
             // Nếu app được mở lại
-            if newPhase == .active && !authManager.isUnlocked {
-                authManager.authenticate() // Yêu cầu xác thực
+            if newPhase == .active {
+                if !authManager.isUnlocked {
+                    authManager.authenticate() // Yêu cầu xác thực
+                }
+                // Xử lý recurring transactions khi app trở lại active
+                DataRepository.shared.processDueRecurringTransactions()
             }
         }
     }

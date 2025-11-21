@@ -59,17 +59,31 @@ class TransactionFormViewModel: ObservableObject {
             self.type = transaction.type ?? "expense"
             self.selectedCategory = transaction.category
             self.selectedCategoryID = transaction.category?.objectID
-            let initialRawAmount = String(Int(transaction.amount))
+            
+            // Convert from VND (stored in DB) to current currency for display
+            let currencySettings = CurrencySettings.shared
+            let convertedAmount = currencySettings.convertFromVnd(transaction.amount)
+            // Round to nearest whole number for input (no decimals in input field)
+            let roundedAmount = currencySettings.currentCurrency == .usd 
+                ? round(convertedAmount) // Round USD to nearest dollar
+                : round(convertedAmount) // Round VND to nearest VND
+            let initialRawAmount = String(Int(roundedAmount))
             self.rawAmount = initialRawAmount
             self.formattedAmount = AppUtils.formatCurrencyInput(initialRawAmount)
         }
     }
     
     func save() {
+        // Convert from current currency to VND before saving
+        let currencySettings = CurrencySettings.shared
+        let inputAmount = AppUtils.currencyToDouble(rawAmount)
+        let vndAmount = currencySettings.convertToVnd(inputAmount)
+        let vndAmountString = String(Int(vndAmount))
+        
         let formData = TransactionFormData(
             transactionTitle: transactionTitle,
             note: note,
-            rawAmount: rawAmount,
+            rawAmount: vndAmountString, // Store as VND in database
             date: date,
             type: type,
             selectedCategoryID: selectedCategoryID
@@ -156,7 +170,12 @@ class TransactionFormViewModel: ObservableObject {
             
             let (amount, textAfterAmount) = self.extractAmount(from: processedText)
             if amount > 0 {
-                let rawAmountString = String(Int(amount))
+                // Speech recognition extracts amount in VND, convert to current currency for display
+                let currencySettings = CurrencySettings.shared
+                let convertedAmount = currencySettings.convertFromVnd(amount)
+                // Round to nearest whole number for input
+                let roundedAmount = round(convertedAmount)
+                let rawAmountString = String(Int(roundedAmount))
                 self.rawAmount = rawAmountString
                 self.formattedAmount = AppUtils.formatCurrencyInput(rawAmountString)
             }

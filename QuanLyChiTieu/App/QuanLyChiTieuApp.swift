@@ -10,10 +10,13 @@ import CoreData
 
 @main
 struct QuanLyChiTieuApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     let persistenceController = PersistenceController.shared
     @State private var isShowingIntro = true
     
     @StateObject private var languageSettings = LanguageSettings()
+    @StateObject private var appearanceSettings = AppearanceSettings.shared
 
     // --- SỬA ĐỔI ---
     // Đổi tên tuple từ 'name' thành 'nameKey'
@@ -28,7 +31,8 @@ struct QuanLyChiTieuApp: App {
         ("default_category_electricity", "bolt.fill"),
         ("default_category_transport", "bus.fill"),
         ("default_category_communication", "phone.fill"),
-        ("default_category_housing", "house.fill")
+        ("default_category_housing", "house.fill"),
+        ("default_category_savings_goal", "target")
     ]
     
     let defaultIncomes: [(nameKey: String, iconName: String)] = [
@@ -62,7 +66,9 @@ struct QuanLyChiTieuApp: App {
             .animation(.easeIn(duration: 0.5), value: isShowingIntro)
             
             .environmentObject(languageSettings)
+            .environmentObject(appearanceSettings)
             .environment(\.locale, .init(identifier: languageSettings.selectedLanguage))
+            .preferredColorScheme(appearanceSettings.colorScheme)
             .onOpenURL { url in
                 print("Đã nhận được URL: \(url.path)")
                 if url.pathExtension == "csv" {

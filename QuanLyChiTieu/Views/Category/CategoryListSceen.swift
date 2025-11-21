@@ -6,6 +6,7 @@ struct CategoryListScreen: View {
     var isPresentingModal: Bool = false
     
     @StateObject private var viewModel = CategoryViewModel()
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
     
     @State private var selectedType = "expense"
     @State private var isEditing = false
@@ -18,7 +19,7 @@ struct CategoryListScreen: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: isPresentingModal ? Binding.constant(NavigationPath()) : navigationCoordinator.path(for: 2)) {
             VStack(spacing: 0) {
                 CustomHeaderView(
                     selectedType: $selectedType,
@@ -96,6 +97,11 @@ struct CategoryListScreen: View {
             // --- KẾT THÚC SỬA ĐỔI ---
             .onAppear {
                 viewModel.fetchAllCategories()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("PopToRoot"))) { notification in
+                if let tab = notification.userInfo?["tab"] as? Int, tab == 2, !isPresentingModal {
+                    navigationCoordinator.popToRoot(for: 2)
+                }
             }
         }
     }

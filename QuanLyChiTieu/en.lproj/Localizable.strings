@@ -140,6 +140,27 @@
 "default_category_side_income" = "Side Income";
 "default_category_investment" = "Investment";
 "default_category_temporary_income" = "Temporary Income";
+"default_category_savings_goal" = "Savings Goal";
+
+// MARK: - Savings Goals
+"savings_goal_completed_notification_title" = "Congratulations!";
+"savings_goal_completed_notification_body" = "You have completed the savings goal %@";
+"savings_goal_complete_button" = "Complete";
+"savings_goal_extend_button" = "Extend Time";
+"savings_goal_extend_title" = "Extend Goal";
+"savings_goal_expired_notification_title" = "Goal Expired";
+"savings_goal_expired_notification_body" = "The goal \"%@\" has expired. Would you like to extend it?";
+"savings_goal_expiring_7_days_title" = "Goal Expiring Soon";
+"savings_goal_expiring_7_days_body" = "The goal \"%@\" will expire in 7 days";
+"savings_goal_expiring_3_days_title" = "Goal Expiring Soon";
+"savings_goal_expiring_3_days_body" = "The goal \"%@\" will expire in 3 days";
+"savings_goal_expiring_1_day_title" = "Goal Expiring Soon";
+"savings_goal_expiring_1_day_body" = "The goal \"%@\" will expire in 1 day";
+"savings_goal_extend_alert_title" = "Extend Goal";
+"savings_goal_extend_alert_message" = "Would you like to extend the goal \"%@\"?";
+"savings_goal_extend_alert_yes" = "Extend";
+"savings_goal_extend_alert_no" = "No";
+"savings_goal_new_target_date_label" = "New Target Date";
 
 // MARK: - Tabbar Name
 "tabbar_home" = "Home";
@@ -163,3 +184,71 @@
 //MARK: - Security
 "settings_row_app_lock_pin" = "PIN";
 "settings_row_use_faceid" = "FaceID";
+
+//MARK: - Currency
+"currency_vnd" = "Vietnamese Dong (VND)";
+"currency_usd" = "US Dollar (USD)";
+
+// MARK: - Budget
+"settings_row_budgets" = "Budgets";
+"budget_period_monthly" = "Monthly";
+"budget_period_quarterly" = "Quarterly";
+"budget_period_yearly" = "Yearly";
+"budget_new_title" = "New Budget";
+"budget_edit_title" = "Edit Budget";
+"budget_category_label" = "Category";
+"budget_total_spending" = "Total Spending";
+"budget_total_spending_desc" = "Track total spending across all categories";
+"budget_amount_label" = "Budget Amount";
+"budget_period_label" = "Budget Period";
+"budget_rollover_label" = "Rollover to Next Period";
+"budget_rollover_desc" = "Remaining amount will be added to next period's budget";
+"budget_active_title" = "Active Budgets";
+"budget_warning_title" = "Budget Warnings";
+"budget_exceeded_title" = "Exceeded Budgets";
+"budget_empty_title" = "No Budgets";
+"budget_empty_desc" = "Create your first budget to track spending!";
+"budget_delete_title" = "Delete Budget";
+"budget_delete_message" = "Are you sure you want to delete this budget? This action cannot be undone.";
+"budget_used_label" = "Used";
+"budget_spent_label" = "Spent";
+"budget_budget_label" = "Budget";
+"budget_remaining_label" = "Remaining";
+"budget_exceeded_message" = "Budget exceeded!";
+"budget_days_remaining" = "%d days remaining in period";
+"budget_period_end_today" = "Today is the last day of period";
+"budget_warning_80" = "Used more than 80% of budget";
+"budget_warning_90" = "Used more than 90% of budget";
+"budget_warning_critical" = "Almost out of budget!";
+"budget_warning_exceeded" = "Budget exceeded!";
+
+// MARK: - Recurring Transactions
+"recurring_frequency_daily" = "Daily";
+"recurring_frequency_weekly" = "Weekly";
+"recurring_frequency_monthly" = "Monthly";
+"recurring_frequency_yearly" = "Yearly";
+"recurring_new_title" = "New Recurring Transaction";
+"recurring_edit_title" = "Edit Recurring Transaction";
+"recurring_title_label" = "Title";
+"recurring_type_label" = "Transaction Type";
+"recurring_amount_label" = "Amount";
+"recurring_category_label" = "Category";
+"recurring_frequency_label" = "Frequency";
+"recurring_start_date_label" = "Start Date";
+"recurring_end_date_label" = "End Date";
+"recurring_has_end_date_label" = "Has End Date";
+"recurring_has_end_date_desc" = "Transaction will automatically stop after this date";
+"recurring_note_label" = "Note (optional)";
+"recurring_active_title" = "Active Recurring Transactions";
+"recurring_due_title" = "Due";
+"recurring_empty_title" = "No Recurring Transactions";
+"recurring_empty_desc" = "Create your first recurring transaction to automatically create transactions!";
+"recurring_delete_title" = "Delete Recurring Transaction";
+"recurring_delete_message" = "Are you sure you want to delete this recurring transaction? This action cannot be undone.";
+"recurring_next_due" = "Next Due";
+"recurring_overdue" = "Overdue %d days";
+"recurring_today" = "Today";
+"recurring_days_remaining" = "%d days remaining";
+"recurring_due_notification" = "Due - Will be created automatically";
+"recurring_end_date_prefix" = "Ends:";
+"settings_row_recurring_transactions" = "Recurring Transactions";

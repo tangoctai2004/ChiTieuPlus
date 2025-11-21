@@ -1,10 +1,3 @@
-////
-////  DataTestView.swift
-////  QuanLyChiTieu
-////
-////  Created by Tạ Ngọc Tài on 17/10/25.
-////
-//
 //import SwiftUI
 //import CoreData
 //import Combine

@@ -49,13 +49,13 @@ struct TransactionRow: View {
             Text(AppUtils.formattedCurrency(transaction.amount))
                 .font(.system(.headline, design: .rounded))
                 .fontWeight(.bold)
-                .foregroundColor(transaction.type == "income" ? .green : .red)
+                .foregroundColor(transaction.type == "income" ? AppColors.incomeColor : AppColors.expenseColor)
         }
         .padding(15)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.primary.opacity(0.1), radius: 8, x: 0, y: 4)
+                .fill(AppColors.cardBackground)
+                .shadow(color: AppColors.cardShadow, radius: 8, x: 0, y: 4)
         )
     }
 }
@@ -65,6 +65,7 @@ struct HomeScreen: View {
     // 1. Sử dụng @StateObject để quản lý ViewModel (Combine model)
     // Tận dụng việc ViewModel đã được tối ưu để Fetch data trên background thread
     @StateObject private var viewModel = TransactionViewModel()
+    @StateObject private var navigationCoordinator = NavigationCoordinator.shared
 
     @State private var selectedFilter: FilterType = .all
     enum FilterType: String, CaseIterable {
@@ -75,13 +76,9 @@ struct HomeScreen: View {
         var localizedName: LocalizedStringKey { LocalizedStringKey(rawValue) }
     }
     
-    // --- Biến Gradient (Giữ nguyên) ---
+    // --- Biến Gradient (Cập nhật với AppColors) ---
     private var gradient: LinearGradient {
-        LinearGradient(
-            colors: [.red, .purple],
-            startPoint: .leading,
-            endPoint: .trailing
-        )
+        AppColors.brandGradient
     }
     
     // 2. Tách riêng logic lọc và nhóm ra khỏi `body`
@@ -107,8 +104,8 @@ struct HomeScreen: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Color(.systemGroupedBackground)
+        NavigationStack(path: navigationCoordinator.path(for: 1)) {
+            AppColors.groupedBackground
                 .ignoresSafeArea()
                 .overlay(
                     VStack(spacing: 0) {
@@ -133,9 +130,9 @@ struct HomeScreen: View {
                         .pickerStyle(.segmented)
                         .padding(.horizontal)
                         .padding(.vertical, 15)
-                        .background(Color(.systemBackground))
+                        .background(AppColors.cardBackground)
                         .cornerRadius(20)
-                        .shadow(color: Color.primary.opacity(0.08), radius: 8, x: 0, y: 4)
+                        .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 4)
                         .padding(.horizontal)
                         .padding(.top, 20)
                         
@@ -176,7 +173,7 @@ struct HomeScreen: View {
                                                 .foregroundColor(.secondary)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                                 .padding(.vertical, 8) // Thêm padding cho header
-                                                .background(Color(.systemGroupedBackground)) // Nền cho header dính
+                                                .background(AppColors.sectionHeaderBackground) // Nền cho header dính
                                                 .padding(.leading, 5) // Giữ padding cũ
                                         }
                                     }
@@ -186,7 +183,7 @@ struct HomeScreen: View {
                             .padding(.bottom, 10)
                         }
                     }
-                    .background(Color(.systemGroupedBackground))
+                    .background(AppColors.groupedBackground)
                 )
             .navigationBarHidden(true)
         }
@@ -194,6 +191,11 @@ struct HomeScreen: View {
             DispatchQueue.main.async { // <--- Chỉ cần thêm dòng này
                 viewModel.fetchTransactions()
             } // <--- Và dòng này
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("PopToRoot"))) { notification in
+            if let tab = notification.userInfo?["tab"] as? Int, tab == 1 {
+                navigationCoordinator.popToRoot(for: 1)
+            }
         }
     }
     

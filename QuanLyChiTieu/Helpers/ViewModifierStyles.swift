@@ -13,7 +13,7 @@ struct PrimaryActionButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(isEnabled ? Color.green : Color.gray)
+            .background(isEnabled ? AppColors.primaryButton : AppColors.primaryButtonDisabled)
             .clipShape(Capsule())
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .opacity(isEnabled ? 1.0 : 0.6)
@@ -28,7 +28,7 @@ struct DestructiveActionButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color.red)
+            .background(AppColors.destructiveButton)
             .clipShape(Capsule())
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
     }
@@ -70,8 +70,8 @@ struct ListRowBackgroundModifier: ViewModifier {
              .padding(15)
              .background(
                  RoundedRectangle(cornerRadius: 20, style: .continuous)
-                     .fill(Color(.systemBackground))
-                     .shadow(color: Color.primary.opacity(0.1), radius: 8, x: 0, y: 4)
+                     .fill(AppColors.cardBackground)
+                     .shadow(color: AppColors.cardShadow, radius: 8, x: 0, y: 4)
              )
      }
 }
