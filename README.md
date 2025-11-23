@@ -181,13 +181,9 @@ App yêu cầu các quyền sau:
 - **Microphone**: Để nhập liệu bằng giọng nói
 - **Speech Recognition**: Để nhận diện giọng nói
 
-## 📝 License
-
-[Thêm thông tin license nếu có]
-
 ## 👨‍💻 Tác giả
 
-[Thêm thông tin tác giả]
+tangoctai2004
 
 ## 🙏 Cảm ơn
 
