@@ -33,6 +33,18 @@ struct BudgetCardView: View {
         budget.warningStatus.color
     }
     
+    private var safePercentageText: String {
+        let safePercentage = budget.usagePercentage.isFinite && !budget.usagePercentage.isNaN ? budget.usagePercentage : 0
+        let percentage = safePercentage * 100
+        // Validate và clamp trước khi convert sang Int
+        if percentage.isFinite && !percentage.isNaN && percentage >= 0 && percentage <= 1000 {
+            let clampedPercentage = max(0, min(1000, percentage))
+            let intValue = Int(clampedPercentage)
+            return "\(intValue)"
+        }
+        return "0"
+    }
+    
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 16) {
@@ -84,7 +96,7 @@ struct BudgetCardView: View {
                         
                         Spacer()
                         
-                        Text("\(Int((budget.usagePercentage.isFinite && !budget.usagePercentage.isNaN ? budget.usagePercentage : 0) * 100))%")
+                        Text("\(safePercentageText)%")
                             .font(.system(.subheadline, design: .rounded).bold())
                             .foregroundColor(warningColor)
                     }

@@ -80,5 +80,32 @@ struct AppUtils{
         let numberString = formatter.string(from: NSNumber(value: convertedAmount)) ?? "0"
         return "\(numberString) \(currency.symbol)"
     }
+    
+    // MARK: - Safe Conversion Helpers
+    
+    /// Safely convert Double to Int, returning 0 if value is invalid
+    static func safeDoubleToInt(_ value: Double, defaultValue: Int = 0) -> Int {
+        guard value.isFinite && !value.isNaN else {
+            return defaultValue
+        }
+        // Clamp to reasonable range to avoid overflow
+        let clamped = max(Double(Int.min), min(Double(Int.max), value))
+        return Int(clamped)
+    }
+    
+    /// Safely validate and clamp Double value
+    static func safeDouble(_ value: Double, defaultValue: Double = 0, min: Double? = nil, max: Double? = nil) -> Double {
+        guard value.isFinite && !value.isNaN else {
+            return defaultValue
+        }
+        var result = value
+        if let min = min {
+            result = Swift.max(min, result)
+        }
+        if let max = max {
+            result = Swift.min(max, result)
+        }
+        return result
+    }
 }
  

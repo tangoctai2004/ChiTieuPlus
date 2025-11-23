@@ -17,41 +17,53 @@ class NavigationCoordinator: ObservableObject {
     @Published var dashboardPath = NavigationPath()
     @Published var settingsPath = NavigationPath()
     
-    private init() {}
+    // Cache bindings để tránh tạo mới mỗi lần và giảm navigation updates
+    private var homePathBinding: Binding<NavigationPath>!
+    private var categoryPathBinding: Binding<NavigationPath>!
+    private var addPathBinding: Binding<NavigationPath>!
+    private var dashboardPathBinding: Binding<NavigationPath>!
+    private var settingsPathBinding: Binding<NavigationPath>!
+    
+    private init() {
+        // Khởi tạo bindings một lần duy nhất
+        homePathBinding = Binding(
+            get: { self.homePath },
+            set: { self.homePath = $0 }
+        )
+        categoryPathBinding = Binding(
+            get: { self.categoryPath },
+            set: { self.categoryPath = $0 }
+        )
+        addPathBinding = Binding(
+            get: { self.addPath },
+            set: { self.addPath = $0 }
+        )
+        dashboardPathBinding = Binding(
+            get: { self.dashboardPath },
+            set: { self.dashboardPath = $0 }
+        )
+        settingsPathBinding = Binding(
+            get: { self.settingsPath },
+            set: { self.settingsPath = $0 }
+        )
+    }
     
     // Lấy path cho tab cụ thể
+    // Sử dụng cached bindings để tránh tạo Binding mới mỗi lần và giảm navigation updates
     func path(for tab: Int) -> Binding<NavigationPath> {
         switch tab {
         case 1: 
-            return Binding(
-                get: { self.homePath },
-                set: { self.homePath = $0 }
-            )
+            return homePathBinding
         case 2:
-            return Binding(
-                get: { self.categoryPath },
-                set: { self.categoryPath = $0 }
-            )
+            return categoryPathBinding
         case 3:
-            return Binding(
-                get: { self.addPath },
-                set: { self.addPath = $0 }
-            )
+            return addPathBinding
         case 4:
-            return Binding(
-                get: { self.dashboardPath },
-                set: { self.dashboardPath = $0 }
-            )
+            return dashboardPathBinding
         case 5:
-            return Binding(
-                get: { self.settingsPath },
-                set: { self.settingsPath = $0 }
-            )
+            return settingsPathBinding
         default:
-            return Binding(
-                get: { self.homePath },
-                set: { self.homePath = $0 }
-            )
+            return homePathBinding
         }
     }
     

@@ -101,8 +101,13 @@ class YearlyCategoryStatisticViewModel: ObservableObject {
         for transaction in self.allTransactionsForYear {
             guard let date = transaction.date else { continue }
             let month = Calendar.current.component(.month, from: date)
-            let amount = (transaction.amount.isNaN || transaction.amount.isInfinite) ? 0 : transaction.amount
-            newChartData[month - 1].totalAmount += amount
+            // Validate amount trước khi cộng
+            let amount = transaction.amount
+            let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+            // Validate totalAmount hiện tại trước khi cộng
+            let currentTotal = newChartData[month - 1].totalAmount
+            let safeCurrentTotal = currentTotal.isFinite && !currentTotal.isNaN ? currentTotal : 0
+            newChartData[month - 1].totalAmount = safeCurrentTotal + safeAmount
         }
         
         self.monthlyChartData = newChartData
@@ -111,12 +116,18 @@ class YearlyCategoryStatisticViewModel: ObservableObject {
         let total = newChartData.reduce(0) { sum, dataPoint in
             let amount = dataPoint.totalAmount
             let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
-            return sum + safeAmount
+            let safeSum = sum.isFinite && !sum.isNaN ? sum : 0
+            let result = safeSum + safeAmount
+            // Validate kết quả cộng
+            return result.isFinite && !result.isNaN ? result : safeSum
         }
-        self.totalYearlyAmount = total
+        // Validate total trước khi gán
+        self.totalYearlyAmount = total.isFinite && !total.isNaN && total >= 0 ? total : 0
         // Validate trước khi chia
-        let safeTotal = total.isFinite && !total.isNaN ? total : 0
-        self.averageMonthlyAmount = safeTotal / 12.0
+        let safeTotal = self.totalYearlyAmount
+        let average = safeTotal / 12.0
+        // Validate average trước khi gán
+        self.averageMonthlyAmount = average.isFinite && !average.isNaN && average >= 0 ? average : 0
     }
     
     // MARK: - (HÀM MỚI) Localization Helper

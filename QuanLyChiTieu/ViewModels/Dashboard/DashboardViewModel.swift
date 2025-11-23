@@ -128,53 +128,109 @@ class DashboardViewModel: ObservableObject {
     // MARK: - Core Logic
     
     private func updateAllCalculations() {
+        // Force UI update bằng cách gọi objectWillChange trước
+        objectWillChange.send()
+        
         self.monthlyTransactions = filterTransactions(month: selectedMonth, year: selectedYear)
         self.yearlyTransactions = filterTransactions(year: selectedYear)
         
         // Helper function để validate và sum amounts
+        // Lưu ý: amount luôn >= 0 trong database (expense và income đều là số dương)
         func safeSum(_ transactions: [Transaction]) -> Double {
-            transactions.compactMap { transaction -> Double? in
+            var total: Double = 0.0
+            for transaction in transactions {
                 let amount = transaction.amount
-                return amount.isFinite && !amount.isNaN && amount >= 0 ? amount : nil
-            }.reduce(0, +)
+                // Chỉ validate isFinite và !isNaN
+                if amount.isFinite && !amount.isNaN {
+                    total += amount
+                }
+            }
+            // Validate kết quả cuối cùng
+            return total.isFinite && !total.isNaN ? total : 0.0
         }
         
-        self.totalMonthlyIncome = safeSum(monthlyTransactions.filter { $0.type == "income" })
-        self.totalMonthlyExpense = safeSum(monthlyTransactions.filter { $0.type == "expense" })
-        self.netMonthlyBalance = self.totalMonthlyIncome - self.totalMonthlyExpense
-
-        self.totalYearlyIncome = safeSum(yearlyTransactions.filter { $0.type == "income" })
-        self.totalYearlyExpense = safeSum(yearlyTransactions.filter { $0.type == "expense" })
-        self.netYearlyBalance = self.totalYearlyIncome - self.totalYearlyExpense
-
-        self.monthlyExpensePieData = calculatePieData(from: monthlyTransactions.filter { $0.type == "expense" }, totalAmount: self.totalMonthlyExpense)
-        self.monthlyIncomePieData = calculatePieData(from: monthlyTransactions.filter { $0.type == "income" }, totalAmount: self.totalMonthlyIncome)
+        let monthlyExpenses = monthlyTransactions.filter { $0.type == "expense" }
+        let monthlyIncomes = monthlyTransactions.filter { $0.type == "income" }
         
-        self.yearlyExpensePieData = calculatePieData(from: yearlyTransactions.filter { $0.type == "expense" }, totalAmount: self.totalYearlyExpense)
-        self.yearlyIncomePieData = calculatePieData(from: yearlyTransactions.filter { $0.type == "income" }, totalAmount: self.totalYearlyIncome)
+        // Debug logging
+        print("📊 Dashboard Update - Month: \(selectedMonth)/\(selectedYear)")
+        print("   Total monthly transactions: \(monthlyTransactions.count)")
+        print("   Monthly expenses count: \(monthlyExpenses.count)")
+        print("   Monthly incomes count: \(monthlyIncomes.count)")
+        
+        if !monthlyExpenses.isEmpty {
+            print("   Expense amounts: \(monthlyExpenses.map { $0.amount })")
+        }
+        
+        let newTotalMonthlyIncome = safeSum(monthlyIncomes)
+        let newTotalMonthlyExpense = safeSum(monthlyExpenses)
+        let newNetMonthlyBalance = newTotalMonthlyIncome - newTotalMonthlyExpense
+        
+        print("   Total monthly expense: \(newTotalMonthlyExpense)")
+        print("   Total monthly income: \(newTotalMonthlyIncome)")
+
+        let yearlyExpenses = yearlyTransactions.filter { $0.type == "expense" }
+        let yearlyIncomes = yearlyTransactions.filter { $0.type == "income" }
+        
+        let newTotalYearlyIncome = safeSum(yearlyIncomes)
+        let newTotalYearlyExpense = safeSum(yearlyExpenses)
+        let newNetYearlyBalance = newTotalYearlyIncome - newTotalYearlyExpense
+
+        // Update tất cả properties cùng lúc để trigger UI update
+        // Đảm bảo update trên main thread (đã được đảm bảo bởi receive(on: DispatchQueue.main))
+        self.totalMonthlyIncome = newTotalMonthlyIncome
+        self.totalMonthlyExpense = newTotalMonthlyExpense
+        self.netMonthlyBalance = newNetMonthlyBalance
+        
+        self.totalYearlyIncome = newTotalYearlyIncome
+        self.totalYearlyExpense = newTotalYearlyExpense
+        self.netYearlyBalance = newNetYearlyBalance
+        
+        self.monthlyExpensePieData = calculatePieData(from: monthlyExpenses, totalAmount: newTotalMonthlyExpense)
+        self.monthlyIncomePieData = calculatePieData(from: monthlyIncomes, totalAmount: newTotalMonthlyIncome)
+        
+        self.yearlyExpensePieData = calculatePieData(from: yearlyExpenses, totalAmount: newTotalYearlyExpense)
+        self.yearlyIncomePieData = calculatePieData(from: yearlyIncomes, totalAmount: newTotalYearlyIncome)
+        
+        print("   ✅ Updated UI - Expense: \(self.totalMonthlyExpense), Income: \(self.totalMonthlyIncome)")
+        print("   Pie data count: \(self.monthlyExpensePieData.count)")
+        if !self.monthlyExpensePieData.isEmpty {
+            print("   Pie data totals: \(self.monthlyExpensePieData.map { $0.total })")
+        }
     }
     
     private func filterTransactions(month: Int? = nil, year: Int) -> [Transaction] {
-        var components = DateComponents()
-        components.year = year
+        let calendar = Calendar.current
         
         if let month = month {
-            components.month = month
-            guard let startOfMonth = Calendar.current.date(from: components),
-                  let endOfMonth = Calendar.current.date(byAdding: .month, value: 1, to: startOfMonth) else { return [] }
-            
-            return allTransactions.filter {
-                guard let date = $0.date else { return false }
-                return date >= startOfMonth && date < endOfMonth
+            // Filter theo tháng
+            let filtered = allTransactions.filter { transaction in
+                guard let date = transaction.date else { return false }
+                // So sánh date components để tránh vấn đề timezone
+                let dateComponents = calendar.dateComponents([.year, .month], from: date)
+                return dateComponents.year == year && dateComponents.month == month
             }
+            
+            // Debug logging
+            print("🔍 Filter transactions for \(month)/\(year):")
+            print("   All transactions count: \(allTransactions.count)")
+            print("   Filtered count: \(filtered.count)")
+            if !filtered.isEmpty {
+                print("   Filtered transaction types: \(filtered.map { $0.type ?? "nil" })")
+                print("   Filtered transaction amounts: \(filtered.map { $0.amount })")
+            }
+            
+            return filtered
         } else {
-            guard let startOfYear = Calendar.current.date(from: components),
-                  let endOfYear = Calendar.current.date(byAdding: .year, value: 1, to: startOfYear) else { return [] }
-            
-            return allTransactions.filter {
-                guard let date = $0.date else { return false }
-                return date >= startOfYear && date < endOfYear
+            // Filter theo năm
+            let filtered = allTransactions.filter { transaction in
+                guard let date = transaction.date else { return false }
+                // So sánh date components để tránh vấn đề timezone
+                let dateComponents = calendar.dateComponents([.year], from: date)
+                return dateComponents.year == year
             }
+            
+            return filtered
         }
     }
     
@@ -197,12 +253,16 @@ class DashboardViewModel: ObservableObject {
             
             // Validate totalAmount và total trước khi tính percentage
             let safeTotalAmount = totalAmount.isFinite && !totalAmount.isNaN && totalAmount > 0 ? totalAmount : 0
-            let percentage = safeTotalAmount > 0 ? (total / safeTotalAmount) : 0.0
+            let safeTotal = total.isFinite && !total.isNaN && total >= 0 ? total : 0
+            let percentage = safeTotalAmount > 0 ? (safeTotal / safeTotalAmount) : 0.0
+            
+            // Validate percentage trước khi trả về
+            let safePercentage = percentage.isFinite && !percentage.isNaN && percentage >= 0 ? min(percentage, 1.0) : 0.0
             
             return CategorySummary(
                 name: name,
-                total: total,
-                percentage: percentage,
+                total: safeTotal,
+                percentage: safePercentage,
                 iconName: iconName,
                 color: color
             )

@@ -21,15 +21,18 @@ struct MonthlyCategoryStatisticScreen: View {
                 .padding(.bottom, 8)
             
             Chart(viewModel.monthlyChartData) { dataPoint in
+                // Validate totalAmount trước khi truyền vào Chart
+                let safeAmount = dataPoint.totalAmount.isFinite && !dataPoint.totalAmount.isNaN && dataPoint.totalAmount >= 0 ? dataPoint.totalAmount : 0
                 BarMark(
                     x: .value(Text("common_month_label"), dataPoint.monthLabel),
-                    y: .value(Text("common_total_amount"), max(0, dataPoint.totalAmount))
+                    y: .value(Text("common_total_amount"), safeAmount)
                 )
                 .foregroundStyle(viewModel.categoryColor)
                 .opacity(dataPoint.month == viewModel.selectedChartMonth ? 1.0 : 0.5)
                 .annotation(position: .top, alignment: .center) {
-                    if dataPoint.totalAmount > 0 {
-                        Text(AppUtils.formattedCurrency(dataPoint.totalAmount))
+                    let safeAmount = dataPoint.totalAmount.isFinite && !dataPoint.totalAmount.isNaN && dataPoint.totalAmount > 0 ? dataPoint.totalAmount : 0
+                    if safeAmount > 0 {
+                        Text(AppUtils.formattedCurrency(safeAmount))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -40,7 +43,8 @@ struct MonthlyCategoryStatisticScreen: View {
                     AxisGridLine()
                     AxisTick()
                     AxisValueLabel {
-                        if let amount = value.as(Double.self) {
+                        if let amount = value.as(Double.self),
+                           amount.isFinite && !amount.isNaN {
                             Text(formatAxisAmount(amount))
                         }
                     }

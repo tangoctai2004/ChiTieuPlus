@@ -220,27 +220,34 @@ struct DashboardScreen: View {
                     }
                 )
                 .onAppear {
-                    // Delay nhỏ để đảm bảo view đã sẵn sàng, đặc biệt khi chuyển từ tutorial
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        viewModel.refreshData()
-                        budgetViewModel.loadBudgets()
-                        
-                        // Delay thêm một chút trước khi update spent amount để đảm bảo budgets đã load xong
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            budgetViewModel.updateAllBudgetsSpentAmount()
-                        }
+                    // Refresh data ngay lập tức để đảm bảo UI được cập nhật
+                    viewModel.refreshData()
+                    budgetViewModel.loadBudgets()
+                    
+                    // Delay một chút trước khi update spent amount để đảm bảo budgets đã load xong
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                        budgetViewModel.updateAllBudgetsSpentAmount()
                     }
                     triggerChartAnimation()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("TransactionDidChange"))) { _ in
-                    budgetViewModel.updateAllBudgetsSpentAmount()
+                    // Debounce updates để tránh multiple updates trong cùng frame
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        budgetViewModel.updateAllBudgetsSpentAmount()
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("BudgetDidChange"))) { _ in
-                    budgetViewModel.loadBudgets()
+                    // Debounce updates để tránh multiple updates trong cùng frame
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        budgetViewModel.loadBudgets()
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("PopToRoot"))) { notification in
                     if let tab = notification.userInfo?["tab"] as? Int, tab == 4 {
-                        navigationCoordinator.popToRoot(for: 4)
+                        // Sử dụng async để tránh update trong cùng frame
+                        DispatchQueue.main.async {
+                            navigationCoordinator.popToRoot(for: 4)
+                        }
                     }
                 }
                 .sheet(isPresented: $isShowingMonthYearPicker) {
@@ -341,9 +348,9 @@ struct SummaryCardView: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
-                SummaryItem(title: "common_expense", amount: -expense, color: expenseColor)
+                SummaryItem(title: "common_expense", amount: expense, isExpense: true, color: expenseColor)
                 Spacer()
-                SummaryItem(title: "common_income", amount: income, color: incomeColor, alignment: .trailing)
+                SummaryItem(title: "common_income", amount: income, isExpense: false, color: incomeColor, alignment: .trailing)
             }
             Divider()
             HStack {
@@ -351,7 +358,7 @@ struct SummaryCardView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
-                Text(AppUtils.formattedCurrency(netBalance))
+                Text(AppUtils.formattedCurrency(abs(netBalance)))
                     .font(.headline.bold())
                     .foregroundColor(netBalance >= 0 ? AppColors.incomeColor : AppColors.expenseColor)
             }
@@ -362,6 +369,7 @@ struct SummaryCardView: View {
     struct SummaryItem: View {
         var title: LocalizedStringKey
         var amount: Double
+        var isExpense: Bool
         var color: Color
         var alignment: HorizontalAlignment = .leading
 
@@ -370,6 +378,7 @@ struct SummaryCardView: View {
                 Text(title)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                // Hiển thị số dương, không cần dấu trừ vì màu đã thể hiện là expense
                 Text(AppUtils.formattedCurrency(amount))
                     .font(.headline.bold())
                     .foregroundColor(color)
@@ -386,8 +395,10 @@ struct PieChartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Chart(data) { item in
+                // Validate total trước khi truyền vào Chart
+                let safeTotal = item.total.isFinite && !item.total.isNaN && item.total >= 0 ? item.total : 0
                 SectorMark(
-                    angle: .value(Text("common_total_amount"), item.total),
+                    angle: .value(Text("common_total_amount"), safeTotal),
                     innerRadius: .ratio(0.5)
                 )
                 .foregroundStyle(item.color)
@@ -422,6 +433,17 @@ struct CategorySummaryListView: View {
 struct CategorySummaryRow: View {
     let item: CategorySummary
     let typeColor: Color
+    
+    private var percentageText: String {
+        // Validate percentage trước khi format
+        let safePercentage = item.percentage.isFinite && !item.percentage.isNaN ? item.percentage : 0
+        let percentageValue = safePercentage * 100
+        // Validate kết quả nhân
+        if percentageValue.isFinite && !percentageValue.isNaN {
+            return String(format: "%.1f%%", percentageValue)
+        }
+        return "0.0%"
+    }
 
     var body: some View {
         HStack(spacing: 16) {
@@ -438,7 +460,7 @@ struct CategorySummaryRow: View {
                     .font(.system(.headline, design: .rounded))
                     .foregroundColor(.primary)
             
-                Text(String(format: "%.1f%%", item.percentage * 100))
+                Text(percentageText)
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundColor(.secondary)
             }

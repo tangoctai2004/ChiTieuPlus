@@ -402,7 +402,15 @@ class NotificationManager {
     func checkAndNotifyBudgetThresholds(for budget: Budget) {
         guard budget.isActive else { return }
         
-        let percentage = budget.usagePercentage * 100
+        // Validate usagePercentage trước khi tính percentage
+        let safeUsagePercentage = budget.usagePercentage.isFinite && !budget.usagePercentage.isNaN ? budget.usagePercentage : 0
+        let percentage = safeUsagePercentage * 100
+        
+        // Validate percentage trước khi sử dụng
+        guard percentage.isFinite && !percentage.isNaN && percentage >= 0 else {
+            return
+        }
+        
         let thresholds = budget.parsedWarningThresholds
         let budgetId = budget.id?.uuidString ?? UUID().uuidString
         

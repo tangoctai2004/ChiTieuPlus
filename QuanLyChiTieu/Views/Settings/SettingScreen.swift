@@ -202,7 +202,6 @@ struct SettingScreen: View {
                 securitySection
                 notificationsSection
                 aboutSection
-                tutorialSection
                 dangerZoneSection
                 Spacer(minLength: 20)
             }
@@ -434,23 +433,6 @@ struct SettingScreen: View {
                 .fill(AppColors.cardBackground)
                 .shadow(color: AppColors.cardShadow, radius: 8, x: 0, y: 4)
         )
-    }
-    
-    private var tutorialSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("settings_section_tutorial")
-                .font(.system(.headline, design: .rounded))
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
-            
-            Button(action: {
-                TutorialManager.shared.resetTutorial()
-            }) {
-                SettingsRowView(iconName: "questionmark.circle.fill", title: "settings_row_show_tutorial", tintColor: .blue)
-            }
-            .foregroundColor(.primary)
-            .padding(.horizontal)
-        }
     }
     
     private var dangerZoneSection: some View {

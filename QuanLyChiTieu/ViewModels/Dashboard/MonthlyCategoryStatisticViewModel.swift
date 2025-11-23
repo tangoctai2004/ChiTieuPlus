@@ -152,9 +152,13 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
         for transaction in self.allTransactionsForYear {
             guard let date = transaction.date else { continue }
             let month = Calendar.current.component(.month, from: date)
+            // Validate amount trước khi cộng
             let amount = transaction.amount
             let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
-            newChartData[month - 1].totalAmount += safeAmount
+            // Validate totalAmount hiện tại trước khi cộng
+            let currentTotal = newChartData[month - 1].totalAmount
+            let safeCurrentTotal = currentTotal.isFinite && !currentTotal.isNaN ? currentTotal : 0
+            newChartData[month - 1].totalAmount = safeCurrentTotal + safeAmount
         }
         
         self.monthlyChartData = newChartData

@@ -103,7 +103,13 @@ struct CustomTabBar: View {
         }
         .frame(maxHeight: midSize)
         .onAppear {
-            midPoint = tabWidth * (-CGFloat(1-3))
+            midPoint = tabWidth * (-CGFloat(tabSelection-3))
+        }
+        .onChange(of: tabSelection) { newValue in
+            // Cập nhật midPoint khi tabSelection thay đổi từ bên ngoài
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7, blendDuration: 0.7)) {
+                midPoint = tabWidth * (-CGFloat(newValue-3))
+            }
         }
     }
 }

@@ -14,7 +14,6 @@ struct ContentView: View {
     
     @StateObject private var transactionFormViewModel = TransactionFormViewModel()
     @StateObject private var navigationCoordinator = NavigationCoordinator.shared
-    @StateObject private var tutorialManager = TutorialManager.shared
     
     init() {
         UITabBar.appearance().isHidden = true
@@ -102,54 +101,6 @@ struct ContentView: View {
                 }
             }
             
-            // --- 3. TUTORIAL OVERLAY (NẰM TRÊN CÙNG) ---
-            if tutorialManager.isTutorialActive && authManager.isUnlocked {
-                TutorialOverlayView(tutorialManager: tutorialManager)
-                    .zIndex(1000)
-                    .onChange(of: tutorialManager.shouldSwitchToInitialScreen) { shouldSwitch in
-                        // Khi tutorial bắt đầu hoặc reset, chuyển tab ngay lập tức
-                        if shouldSwitch {
-                            let targetScreen = tutorialManager.currentScreen
-                            DispatchQueue.main.async {
-                                switch targetScreen {
-                                case .home:
-                                    tabSelection = 1
-                                case .category:
-                                    tabSelection = 2
-                                case .addTransaction:
-                                    tabSelection = 3
-                                case .dashboard:
-                                    tabSelection = 4
-                                case .settings:
-                                    tabSelection = 5
-                                }
-                                // Reset flag sau khi đã chuyển tab
-                                tutorialManager.shouldSwitchToInitialScreen = false
-                            }
-                        }
-                    }
-                    .onChange(of: tutorialManager.currentScreen) { newScreen in
-                        // Tự động chuyển tab khi tutorial chuyển screen (khi next step)
-                        // Chỉ chuyển nếu không phải là lần đầu (để tránh conflict với shouldSwitchToInitialScreen)
-                        if !tutorialManager.shouldSwitchToInitialScreen {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                                switch newScreen {
-                                case .home:
-                                    tabSelection = 1
-                                case .category:
-                                    tabSelection = 2
-                                case .addTransaction:
-                                    tabSelection = 3
-                                case .dashboard:
-                                    tabSelection = 4
-                                case .settings:
-                                    tabSelection = 5
-                                }
-                            }
-                        }
-                    }
-            }
-            
         } // Kết thúc ZStack chính
         .onAppear {
             // Khi app vừa mở, yêu cầu xác thực ngay
@@ -158,21 +109,9 @@ struct ContentView: View {
             }
             // Xử lý recurring transactions khi app khởi động
             DataRepository.shared.processDueRecurringTransactions()
-            
-            // Kiểm tra và bắt đầu tutorial nếu cần (sau khi app đã unlock)
-            if authManager.isUnlocked && tutorialManager.shouldStartTutorial() {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    tutorialManager.startTutorial()
-                }
-            }
         }
-        .onChange(of: authManager.isUnlocked) { isUnlocked in
-            // Khi app được unlock, kiểm tra tutorial
-            if isUnlocked && tutorialManager.shouldStartTutorial() {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    tutorialManager.startTutorial()
-                }
-            }
+        .onChange(of: authManager.isUnlocked) { _ in
+            // Không cần làm gì khi unlock
         }
         .onChange(of: scenePhase) { newPhase in
             // Nếu app bị đưa ra ngoài (vd: nhấn Home)

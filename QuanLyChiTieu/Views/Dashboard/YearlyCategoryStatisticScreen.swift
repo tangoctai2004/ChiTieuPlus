@@ -23,15 +23,18 @@ struct YearlyCategoryStatisticScreen: View {
                 .padding(.bottom, 8)
             
             Chart(viewModel.monthlyChartData) { dataPoint in
+                // Validate totalAmount trước khi truyền vào Chart
+                let safeAmount = dataPoint.totalAmount.isFinite && !dataPoint.totalAmount.isNaN && dataPoint.totalAmount >= 0 ? dataPoint.totalAmount : 0
                 BarMark(
                     // Trục X (T1.../Jan...) đã được ViewModel xử lý
                     x: .value(Text(NSLocalizedString("common_month_label", comment: "")), dataPoint.monthLabel),
-                    y: .value(Text(NSLocalizedString("common_total_amount", comment: "")), max(0, dataPoint.totalAmount))
+                    y: .value(Text(NSLocalizedString("common_total_amount", comment: "")), safeAmount)
                 )
                 .foregroundStyle(viewModel.categoryColor)
                 .annotation(position: .top, alignment: .center) {
-                    if dataPoint.totalAmount > (viewModel.totalYearlyAmount / 12) {
-                        Text(AppUtils.formattedCurrency(dataPoint.totalAmount))
+                    let safeTotalYearly = viewModel.totalYearlyAmount.isFinite && !viewModel.totalYearlyAmount.isNaN && viewModel.totalYearlyAmount > 0 ? viewModel.totalYearlyAmount : 1
+                    if safeAmount > (safeTotalYearly / 12) {
+                        Text(AppUtils.formattedCurrency(safeAmount))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -43,7 +46,8 @@ struct YearlyCategoryStatisticScreen: View {
                     AxisGridLine()
                     AxisTick()
                     AxisValueLabel {
-                        if let amount = value.as(Double.self) {
+                        if let amount = value.as(Double.self),
+                           amount.isFinite && !amount.isNaN {
                             Text(formatAxisAmount(amount))
                         }
                     }

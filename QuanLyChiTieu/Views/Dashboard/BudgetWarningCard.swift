@@ -33,9 +33,11 @@ struct BudgetWarningCard: View {
     
     private var safePercentageText: String {
         let percentage = safePercentage * 100
-        // Validate trước khi convert sang Int
-        if percentage.isFinite && !percentage.isNaN {
-            let intValue = Int(percentage)
+        // Validate trước khi convert sang Int - đảm bảo không có NaN/Infinite
+        if percentage.isFinite && !percentage.isNaN && percentage >= 0 && percentage <= 1000 {
+            // Clamp giá trị trong phạm vi hợp lệ trước khi convert
+            let clampedPercentage = max(0, min(1000, percentage))
+            let intValue = Int(clampedPercentage)
             return "\(intValue)"
         }
         return "0"
