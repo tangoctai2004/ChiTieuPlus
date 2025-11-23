@@ -220,11 +220,16 @@ struct DashboardScreen: View {
                     }
                 )
                 .onAppear {
-                    DispatchQueue.main.async {
+                    // Delay nhỏ để đảm bảo view đã sẵn sàng, đặc biệt khi chuyển từ tutorial
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         viewModel.refreshData()
+                        budgetViewModel.loadBudgets()
+                        
+                        // Delay thêm một chút trước khi update spent amount để đảm bảo budgets đã load xong
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            budgetViewModel.updateAllBudgetsSpentAmount()
+                        }
                     }
-                    budgetViewModel.loadBudgets()
-                    budgetViewModel.updateAllBudgetsSpentAmount()
                     triggerChartAnimation()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("TransactionDidChange"))) { _ in

@@ -41,20 +41,40 @@ extension Budget : Identifiable {
     }
     
     public var spentAmount: Double {
-        return DataRepository.shared.calculateSpentAmount(for: self)
+        let calculated = DataRepository.shared.calculateSpentAmount(for: self)
+        // Validate trước khi trả về
+        return calculated.isFinite && !calculated.isNaN && calculated >= 0 ? calculated : 0
     }
     
     public var usagePercentage: Double {
-        guard amount > 0 else { return 0 }
-        return min(spentAmount / amount, 1.0)
+        // Validate amount và spentAmount trước khi tính
+        let safeAmount = amount.isFinite && !amount.isNaN && amount > 0 ? amount : 1
+        let safeSpent = spentAmount.isFinite && !spentAmount.isNaN && spentAmount >= 0 ? spentAmount : 0
+        
+        let percentage = safeSpent / safeAmount
+        // Validate kết quả
+        if percentage.isFinite && !percentage.isNaN {
+            return min(percentage, 1.0)
+        }
+        return 0
     }
     
     public var remainingAmount: Double {
-        return max(amount - spentAmount, 0)
+        let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+        let safeSpent = spentAmount.isFinite && !spentAmount.isNaN && spentAmount >= 0 ? spentAmount : 0
+        let remaining = safeAmount - safeSpent
+        return remaining.isFinite && !remaining.isNaN ? max(remaining, 0) : 0
     }
     
     public var warningStatus: BudgetWarningStatus {
-        let percentage = usagePercentage * 100
+        let safePercentage = usagePercentage.isFinite && !usagePercentage.isNaN ? usagePercentage : 0
+        let percentage = safePercentage * 100
+        
+        // Validate percentage trước khi so sánh
+        guard percentage.isFinite && !percentage.isNaN else {
+            return .normal
+        }
+        
         let thresholds = parsedWarningThresholds
         
         if percentage >= 100 {

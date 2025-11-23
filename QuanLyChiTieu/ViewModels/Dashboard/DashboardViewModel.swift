@@ -131,12 +131,20 @@ class DashboardViewModel: ObservableObject {
         self.monthlyTransactions = filterTransactions(month: selectedMonth, year: selectedYear)
         self.yearlyTransactions = filterTransactions(year: selectedYear)
         
-        self.totalMonthlyIncome = monthlyTransactions.filter { $0.type == "income" }.map(\.amount).reduce(0, +)
-        self.totalMonthlyExpense = monthlyTransactions.filter { $0.type == "expense" }.map(\.amount).reduce(0, +)
+        // Helper function để validate và sum amounts
+        func safeSum(_ transactions: [Transaction]) -> Double {
+            transactions.compactMap { transaction -> Double? in
+                let amount = transaction.amount
+                return amount.isFinite && !amount.isNaN && amount >= 0 ? amount : nil
+            }.reduce(0, +)
+        }
+        
+        self.totalMonthlyIncome = safeSum(monthlyTransactions.filter { $0.type == "income" })
+        self.totalMonthlyExpense = safeSum(monthlyTransactions.filter { $0.type == "expense" })
         self.netMonthlyBalance = self.totalMonthlyIncome - self.totalMonthlyExpense
 
-        self.totalYearlyIncome = yearlyTransactions.filter { $0.type == "income" }.map(\.amount).reduce(0, +)
-        self.totalYearlyExpense = yearlyTransactions.filter { $0.type == "expense" }.map(\.amount).reduce(0, +)
+        self.totalYearlyIncome = safeSum(yearlyTransactions.filter { $0.type == "income" })
+        self.totalYearlyExpense = safeSum(yearlyTransactions.filter { $0.type == "expense" })
         self.netYearlyBalance = self.totalYearlyIncome - self.totalYearlyExpense
 
         self.monthlyExpensePieData = calculatePieData(from: monthlyTransactions.filter { $0.type == "expense" }, totalAmount: self.totalMonthlyExpense)
@@ -180,9 +188,16 @@ class DashboardViewModel: ObservableObject {
             
             let color = IconProvider.color(for: iconName)
             
-            let total = transactions.map(\.amount).reduce(0, +)
+            // Validate và filter các amount không hợp lệ
+            let validAmounts = transactions.compactMap { transaction -> Double? in
+                let amount = transaction.amount
+                return amount.isFinite && !amount.isNaN && amount >= 0 ? amount : nil
+            }
+            let total = validAmounts.reduce(0, +)
             
-            let percentage = (totalAmount == 0 || totalAmount.isNaN || totalAmount.isInfinite) ? 0.0 : (total / totalAmount)
+            // Validate totalAmount và total trước khi tính percentage
+            let safeTotalAmount = totalAmount.isFinite && !totalAmount.isNaN && totalAmount > 0 ? totalAmount : 0
+            let percentage = safeTotalAmount > 0 ? (total / safeTotalAmount) : 0.0
             
             return CategorySummary(
                 name: name,

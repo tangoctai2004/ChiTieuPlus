@@ -62,12 +62,18 @@ class TransactionFormViewModel: ObservableObject {
             
             // Convert from VND (stored in DB) to current currency for display
             let currencySettings = CurrencySettings.shared
-            let convertedAmount = currencySettings.convertFromVnd(transaction.amount)
+            // Validate transaction.amount trước khi convert
+            let safeAmount = transaction.amount.isFinite && !transaction.amount.isNaN && transaction.amount >= 0 
+                ? transaction.amount 
+                : 0
+            let convertedAmount = currencySettings.convertFromVnd(safeAmount)
             // Round to nearest whole number for input (no decimals in input field)
             let roundedAmount = currencySettings.currentCurrency == .usd 
                 ? round(convertedAmount) // Round USD to nearest dollar
                 : round(convertedAmount) // Round VND to nearest VND
-            let initialRawAmount = String(Int(roundedAmount))
+            // Validate trước khi convert để tránh crash
+            let safeRoundedAmount = roundedAmount.isFinite && !roundedAmount.isNaN ? roundedAmount : 0
+            let initialRawAmount = String(Int(safeRoundedAmount))
             self.rawAmount = initialRawAmount
             self.formattedAmount = AppUtils.formatCurrencyInput(initialRawAmount)
         }
@@ -78,7 +84,9 @@ class TransactionFormViewModel: ObservableObject {
         let currencySettings = CurrencySettings.shared
         let inputAmount = AppUtils.currencyToDouble(rawAmount)
         let vndAmount = currencySettings.convertToVnd(inputAmount)
-        let vndAmountString = String(Int(vndAmount))
+        // Validate trước khi convert để tránh crash
+        let safeVndAmount = vndAmount.isFinite && !vndAmount.isNaN ? vndAmount : 0
+        let vndAmountString = String(Int(safeVndAmount))
         
         let formData = TransactionFormData(
             transactionTitle: transactionTitle,
@@ -175,7 +183,9 @@ class TransactionFormViewModel: ObservableObject {
                 let convertedAmount = currencySettings.convertFromVnd(amount)
                 // Round to nearest whole number for input
                 let roundedAmount = round(convertedAmount)
-                let rawAmountString = String(Int(roundedAmount))
+                // Validate trước khi convert để tránh crash
+                let safeRoundedAmount = roundedAmount.isFinite && !roundedAmount.isNaN ? roundedAmount : 0
+                let rawAmountString = String(Int(safeRoundedAmount))
                 self.rawAmount = rawAmountString
                 self.formattedAmount = AppUtils.formatCurrencyInput(rawAmountString)
             }

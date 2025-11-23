@@ -56,7 +56,8 @@ extension RecurringTransaction : Identifiable {
             case .daily:
                 currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
             case .weekly:
-                currentDate = calendar.date(byAdding: .weekOfYear, value: 1, to: currentDate) ?? currentDate
+                // Sử dụng WeekStartSettings để tính tuần theo ngày bắt đầu tuần đã chọn
+                currentDate = WeekStartSettings.shared.addWeeks(1, to: currentDate)
             case .monthly:
                 currentDate = calendar.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
             case .yearly:

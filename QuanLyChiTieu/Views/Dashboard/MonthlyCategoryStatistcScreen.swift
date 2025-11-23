@@ -89,7 +89,11 @@ struct MonthlyCategoryStatisticScreen: View {
         ScrollView {
             LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
                 ForEach(viewModel.groupedDisplayedTransactions, id: \.date) { group in
-                    let dailyTotal = group.items.reduce(0) { $0 + ($1.amount.isNaN ? 0 : $1.amount) }
+                    let dailyTotal = group.items.reduce(0) { sum, transaction in
+                        let amount = transaction.amount
+                        let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+                        return sum + safeAmount
+                    }
                     let headerView = HStack {
                         Text(viewModel.formattedSectionHeaderDate(group.date)) // Already localized in ViewModel
                         Spacer()

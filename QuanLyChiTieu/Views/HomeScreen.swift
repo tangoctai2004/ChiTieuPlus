@@ -68,6 +68,9 @@ struct HomeScreen: View {
     @StateObject private var navigationCoordinator = NavigationCoordinator.shared
 
     @State private var selectedFilter: FilterType = .all
+    @State private var searchText: String = ""
+    @FocusState private var isSearchFocused: Bool
+    
     enum FilterType: String, CaseIterable {
         case all = "filter_all"
         case income = "filter_income"
@@ -84,14 +87,59 @@ struct HomeScreen: View {
     // 2. Tách riêng logic lọc và nhóm ra khỏi `body`
     // Tốc độ phụ thuộc vào số lượng item trong viewModel.allTransactions
     private var filteredTransactions: [Transaction] {
+        var transactions = viewModel.allTransactions
+        
+        // Lọc theo loại (income/expense/all)
         switch selectedFilter {
         case .all:
-            return viewModel.allTransactions
+            break
         case .income:
-            return viewModel.allTransactions.filter { $0.type == "income" }
+            transactions = transactions.filter { $0.type == "income" }
         case .expense:
-            return viewModel.allTransactions.filter { $0.type == "expense" }
+            transactions = transactions.filter { $0.type == "expense" }
         }
+        
+        // Lọc theo tìm kiếm nếu có
+        if !searchText.isEmpty {
+            let searchLower = searchText.lowercased()
+            transactions = transactions.filter { transaction in
+                // Tìm trong tiêu đề
+                let title = transaction.title?.lowercased() ?? ""
+                if title.contains(searchLower) {
+                    return true
+                }
+                
+                // Tìm trong ghi chú
+                let note = transaction.note?.lowercased() ?? ""
+                if note.contains(searchLower) {
+                    return true
+                }
+                
+                // Tìm trong tên danh mục (cần lấy localized name)
+                if let categoryName = transaction.category?.name {
+                    // Thử tìm trong key
+                    let categoryKey = categoryName.lowercased()
+                    if categoryKey.contains(searchLower) {
+                        return true
+                    }
+                    // Cũng thử tìm trong localized string
+                    let localizedCategory = NSLocalizedString(categoryName, comment: "").lowercased()
+                    if localizedCategory.contains(searchLower) && localizedCategory != categoryKey {
+                        return true
+                    }
+                }
+                
+                // Tìm trong số tiền (format)
+                let amountString = AppUtils.formattedCurrency(transaction.amount).lowercased()
+                if amountString.contains(searchLower) {
+                    return true
+                }
+                
+                return false
+            }
+        }
+        
+        return transactions
     }
 
     // Nhóm theo ngày
@@ -121,6 +169,38 @@ struct HomeScreen: View {
                             .padding(.top, 13)
                         }
                         
+                        // --- Search Bar (MỚI) ---
+                        HStack(spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 16))
+                                
+                                TextField("home_search_placeholder", text: $searchText)
+                                    .focused($isSearchFocused)
+                                    .textFieldStyle(PlainTextFieldStyle())
+                                    .font(.system(.body, design: .rounded))
+                                
+                                if !searchText.isEmpty {
+                                    Button(action: {
+                                        searchText = ""
+                                        isSearchFocused = false
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.secondary)
+                                            .font(.system(size: 16))
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(AppColors.cardBackground)
+                            .cornerRadius(12)
+                            .shadow(color: AppColors.shadowColor.opacity(0.1), radius: 4, x: 0, y: 2)
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 15)
+                        
                         // --- Picker (Giữ nguyên) ---
                         Picker("home_filter_picker_label", selection: $selectedFilter.animation(.easeInOut(duration: 0.3))) {
                             ForEach(FilterType.allCases, id: \.self) { type in
@@ -134,21 +214,28 @@ struct HomeScreen: View {
                         .cornerRadius(20)
                         .shadow(color: AppColors.shadowColor, radius: 8, x: 0, y: 4)
                         .padding(.horizontal)
-                        .padding(.top, 20)
+                        .padding(.top, 12)
                         
                         // --- DANH SÁCH GIAO DỊCH ---
                         // 3. Sử dụng LazyVStack bên trong ScrollView
                         ScrollView {
                             LazyVStack(spacing: 18, pinnedViews: [.sectionHeaders]) { // Thêm pinnedViews
                                 if groupedTransactions.isEmpty {
-                                    // --- Phần "Chưa có giao dịch" (Giữ nguyên) ---
+                                    // --- Phần "Chưa có giao dịch" hoặc "Không tìm thấy" ---
                                     VStack(spacing: 12) {
-                                        Image(systemName: "tray")
+                                        Image(systemName: searchText.isEmpty ? "tray" : "magnifyingglass")
                                             .font(.system(size: 60))
                                             .foregroundColor(.secondary)
-                                        Text("home_no_transactions")
+                                        Text(searchText.isEmpty ? "home_no_transactions" : "home_search_no_results")
                                             .foregroundColor(.secondary)
                                             .font(.title3)
+                                        if !searchText.isEmpty {
+                                            Text("home_search_no_results_hint")
+                                                .foregroundColor(.secondary.opacity(0.7))
+                                                .font(.subheadline)
+                                                .multilineTextAlignment(.center)
+                                                .padding(.horizontal)
+                                        }
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(.top, 100)

@@ -13,6 +13,12 @@ struct AppUtils{
     static func formatCurrencyInput(_ input:String) -> String{
         let raw = input.filter { "0123456789".contains($0) }
         let number = Double(raw) ?? 0
+        
+        // Validate number trước khi format
+        guard number.isFinite && !number.isNaN && number >= 0 else {
+            return ""
+        }
+        
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.groupingSeparator = "."
@@ -23,7 +29,14 @@ struct AppUtils{
     
 //    Chuyen chuoi da dinh dang ve so -> save coredata
     static func currencyToDouble(_ input:String) -> Double{
-        Double(input.filter { "0123456789".contains($0)}) ?? 0
+        let raw = input.filter { "0123456789".contains($0) }
+        let number = Double(raw) ?? 0
+        
+        // Validate và đảm bảo giá trị hợp lệ
+        if number.isFinite && !number.isNaN && number >= 0 {
+            return number
+        }
+        return 0
     }
     
     static let transactionTypes: [String] = ["income", "expense"]
@@ -37,8 +50,19 @@ struct AppUtils{
     }
     
     static func formattedCurrency(_ amount: Double, currencySettings: CurrencySettings? = nil) -> String{
+        // Validate amount trước khi format
+        guard amount.isFinite && !amount.isNaN && amount >= 0 else {
+            return "0 \(CurrencySettings.shared.currentCurrency.symbol)"
+        }
+        
         let currencySettings = currencySettings ?? CurrencySettings.shared
         let convertedAmount = currencySettings.convertFromVnd(amount)
+        
+        // Validate convertedAmount
+        guard convertedAmount.isFinite && !convertedAmount.isNaN else {
+            return "0 \(currencySettings.currentCurrency.symbol)"
+        }
+        
         let currency = currencySettings.currentCurrency
         
         let formatter = NumberFormatter()
@@ -53,7 +77,7 @@ struct AppUtils{
             formatter.maximumFractionDigits = 0
         }
         
-        let numberString = formatter.string(from: NSNumber(value: convertedAmount)) ?? "\(convertedAmount)"
+        let numberString = formatter.string(from: NSNumber(value: convertedAmount)) ?? "0"
         return "\(numberString) \(currency.symbol)"
     }
 }

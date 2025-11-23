@@ -107,10 +107,16 @@ class YearlyCategoryStatisticViewModel: ObservableObject {
         
         self.monthlyChartData = newChartData
         
-        // 3. Tính toán tổng (Giữ nguyên)
-        let total = newChartData.reduce(0) { $0 + $1.totalAmount }
+        // 3. Tính toán tổng (Validate totalAmount)
+        let total = newChartData.reduce(0) { sum, dataPoint in
+            let amount = dataPoint.totalAmount
+            let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+            return sum + safeAmount
+        }
         self.totalYearlyAmount = total
-        self.averageMonthlyAmount = total / 12.0
+        // Validate trước khi chia
+        let safeTotal = total.isFinite && !total.isNaN ? total : 0
+        self.averageMonthlyAmount = safeTotal / 12.0
     }
     
     // MARK: - (HÀM MỚI) Localization Helper

@@ -42,7 +42,9 @@ struct RecurringTransactionFormView: View {
         
         if let recurring = recurring {
             _title = State(initialValue: recurring.title ?? "")
-            _amount = State(initialValue: String(format: "%.0f", recurring.amount))
+            // Validate amount trước khi format
+            let safeAmount = recurring.amount.isFinite && !recurring.amount.isNaN ? recurring.amount : 0
+            _amount = State(initialValue: String(format: "%.0f", safeAmount))
             _selectedType = State(initialValue: recurring.type ?? "expense")
             _selectedCategoryID = State(initialValue: recurring.categoryID)
             _selectedFrequency = State(initialValue: recurring.transactionFrequency)

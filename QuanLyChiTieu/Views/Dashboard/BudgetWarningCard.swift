@@ -27,6 +27,20 @@ struct BudgetWarningCard: View {
         budget.warningStatus.color
     }
     
+    private var safePercentage: Double {
+        budget.usagePercentage.isFinite && !budget.usagePercentage.isNaN ? budget.usagePercentage : 0
+    }
+    
+    private var safePercentageText: String {
+        let percentage = safePercentage * 100
+        // Validate trước khi convert sang Int
+        if percentage.isFinite && !percentage.isNaN {
+            let intValue = Int(percentage)
+            return "\(intValue)"
+        }
+        return "0"
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: budget.usagePercentage >= 1.0 ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
@@ -47,7 +61,7 @@ struct BudgetWarningCard: View {
                         .foregroundColor(.primary)
                 }
                 
-                Text("\(Int(budget.usagePercentage * 100))% - \(AppUtils.formattedCurrency(budget.spentAmount)) / \(AppUtils.formattedCurrency(budget.amount))")
+                Text("\(safePercentageText)% - \(AppUtils.formattedCurrency(budget.spentAmount)) / \(AppUtils.formattedCurrency(budget.amount))")
                     .font(.system(.caption, design: .rounded))
                     .foregroundColor(.secondary)
             }

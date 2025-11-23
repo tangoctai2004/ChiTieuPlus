@@ -48,21 +48,33 @@ class CurrencySettings: ObservableObject {
     
     // Chuyển đổi từ VND (lưu trong database) sang currency hiện tại
     func convertFromVnd(_ vndAmount: Double) -> Double {
+        // Validate input
+        guard vndAmount.isFinite && !vndAmount.isNaN else {
+            return 0
+        }
+        
         switch currentCurrency {
         case .vnd:
             return vndAmount
         case .usd:
-            return vndAmount / CurrencySettings.usdToVndRate
+            let result = vndAmount / CurrencySettings.usdToVndRate
+            return result.isFinite && !result.isNaN ? result : 0
         }
     }
     
     // Chuyển đổi từ currency hiện tại về VND (để lưu vào database)
     func convertToVnd(_ amount: Double) -> Double {
+        // Validate input
+        guard amount.isFinite && !amount.isNaN else {
+            return 0
+        }
+        
         switch currentCurrency {
         case .vnd:
             return amount
         case .usd:
-            return amount * CurrencySettings.usdToVndRate
+            let result = amount * CurrencySettings.usdToVndRate
+            return result.isFinite && !result.isNaN ? result : 0
         }
     }
 }

@@ -301,7 +301,7 @@ struct SavingsGoalCardView: View {
                         
                         Spacer()
                         
-                        Text("\(Int(goal.progress * 100))%")
+                        Text("\(Int((goal.progress.isFinite && !goal.progress.isNaN ? goal.progress : 0) * 100))%")
                             .font(.system(.subheadline, design: .rounded).bold())
                             .foregroundColor(progressColor)
                     }

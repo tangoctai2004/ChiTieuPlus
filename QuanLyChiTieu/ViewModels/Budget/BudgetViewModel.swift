@@ -30,11 +30,16 @@ class BudgetViewModel: ObservableObject {
     }
     
     func updateAllBudgetsSpentAmount() {
+        // Đảm bảo chạy trên main thread và có guard để tránh race condition
+        guard !isLoading else { return }
+        
         // Update period for expired budgets
         repository.updateBudgetPeriods()
         
-        // Reload budgets to get latest data
-        loadBudgets()
+        // Reload budgets to get latest data với delay nhỏ để đảm bảo updateBudgetPeriods đã hoàn thành
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.loadBudgets()
+        }
     }
     
     func addBudget(
@@ -91,7 +96,14 @@ class BudgetViewModel: ObservableObject {
     
     var warningBudgets: [Budget] {
         activeBudgets.filter { budget in
-            let percentage = budget.usagePercentage * 100
+            let safePercentage = budget.usagePercentage.isFinite && !budget.usagePercentage.isNaN ? budget.usagePercentage : 0
+            let percentage = safePercentage * 100
+            
+            // Validate percentage trước khi so sánh
+            guard percentage.isFinite && !percentage.isNaN else {
+                return false
+            }
+            
             let thresholds = budget.parsedWarningThresholds
             return percentage >= Double(thresholds[0]) && percentage < 100
         }

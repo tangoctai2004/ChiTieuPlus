@@ -38,7 +38,11 @@ class SavingsGoalViewModel: ObservableObject {
             print("   - Ngày bắt đầu: \(goal.startDate?.description ?? "không có")")
             print("   - Tiết kiệm hiện tại: \(currentSavings)")
             print("   - Mục tiêu: \(goal.targetAmount)")
-            print("   - Tiến độ: \(Int((currentSavings / goal.targetAmount) * 100))%")
+            let progress = goal.targetAmount > 0 && currentSavings.isFinite && goal.targetAmount.isFinite 
+                ? (currentSavings / goal.targetAmount) 
+                : 0
+            let safeProgress = progress.isFinite && !progress.isNaN ? progress : 0
+            print("   - Tiến độ: \(Int(safeProgress * 100))%")
             repository.updateSavingsGoalProgress(goal, amount: currentSavings)
         }
         loadSavingsGoals()

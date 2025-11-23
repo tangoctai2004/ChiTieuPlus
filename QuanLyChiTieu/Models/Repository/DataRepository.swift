@@ -123,7 +123,9 @@ class DataRepository {
         let title = formData.transactionTitle
         
         newTransaction.note = formData.note
-        newTransaction.amount = AppUtils.currencyToDouble(formData.rawAmount)
+        let amount = AppUtils.currencyToDouble(formData.rawAmount)
+        // Validate amount trước khi gán
+        newTransaction.amount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
         newTransaction.date = formData.date
         newTransaction.type = formData.type
         newTransaction.createAt = Date()
@@ -146,7 +148,9 @@ class DataRepository {
     ) {
         let title = formData.transactionTitle
         transactionToEdit.note = formData.note
-        transactionToEdit.amount = AppUtils.currencyToDouble(formData.rawAmount)
+        let amount = AppUtils.currencyToDouble(formData.rawAmount)
+        // Validate amount trước khi gán
+        transactionToEdit.amount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
         transactionToEdit.date = formData.date
         transactionToEdit.type = formData.type
         transactionToEdit.updateAt = Date()
@@ -403,7 +407,11 @@ class DataRepository {
         
         do {
             let incomeTransactions = try context.fetch(request)
-            let totalIncome = incomeTransactions.reduce(0.0) { $0 + ($1.amount.isNaN ? 0 : $1.amount) }
+            let totalIncome = incomeTransactions.reduce(0.0) { sum, transaction in
+                let amount = transaction.amount
+                let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+                return sum + safeAmount
+            }
             
             let dateStr = normalizedStartDate != nil ? 
                 DateFormatter.localizedString(from: normalizedStartDate!, dateStyle: .short, timeStyle: .none) : 
@@ -422,7 +430,11 @@ class DataRepository {
             }
             
             let expenseTransactions = try context.fetch(expenseRequest)
-            let totalExpense = expenseTransactions.reduce(0.0) { $0 + ($1.amount.isNaN ? 0 : $1.amount) }
+            let totalExpense = expenseTransactions.reduce(0.0) { sum, transaction in
+                let amount = transaction.amount
+                let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+                return sum + safeAmount
+            }
             
             print("💸 Tổng chi tiêu từ \(dateStr): \(totalExpense) (số giao dịch: \(expenseTransactions.count))")
             
@@ -548,7 +560,11 @@ class DataRepository {
         
         do {
             let transactions = try context.fetch(request)
-            return transactions.reduce(0) { $0 + $1.amount }
+            return transactions.reduce(0) { sum, transaction in
+                let amount = transaction.amount
+                let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+                return sum + safeAmount
+            }
         } catch {
             print("❌ Lỗi khi tính toán spent amount: \(error)")
             return 0
@@ -579,8 +595,18 @@ class DataRepository {
             if budget.rolloverEnabled {
                 // Rollover: Chuyển số tiền còn lại sang kỳ mới
                 let spent = calculateSpentAmount(for: budget)
-                let remaining = max(budget.amount - spent, 0)
-                budget.amount = budget.amount + remaining // Thêm số tiền còn lại vào ngân sách mới
+                
+                // Validate tất cả giá trị trước khi tính toán
+                let safeAmount = budget.amount.isFinite && !budget.amount.isNaN && budget.amount >= 0 ? budget.amount : 0
+                let safeSpent = spent.isFinite && !spent.isNaN && spent >= 0 ? spent : 0
+                
+                let remaining = max(safeAmount - safeSpent, 0)
+                let newAmount = safeAmount + remaining
+                
+                // Validate kết quả trước khi gán
+                if newAmount.isFinite && !newAmount.isNaN && newAmount >= 0 {
+                    budget.amount = newAmount
+                }
             }
             
             // Reset startDate cho kỳ mới
@@ -757,7 +783,8 @@ class DataRepository {
             case .daily:
                 nextDate = calendar.date(byAdding: .day, value: cycles, to: start) ?? nextDate
             case .weekly:
-                nextDate = calendar.date(byAdding: .weekOfYear, value: cycles, to: start) ?? nextDate
+                // Sử dụng WeekStartSettings để tính tuần theo ngày bắt đầu tuần đã chọn
+                nextDate = WeekStartSettings.shared.addWeeks(cycles, to: start)
             case .monthly:
                 nextDate = calendar.date(byAdding: .month, value: cycles, to: start) ?? nextDate
             case .yearly:
@@ -817,7 +844,8 @@ class DataRepository {
                 case .daily:
                     newNextDate = calendar.date(byAdding: .day, value: 1, to: currentDueDate)
                 case .weekly:
-                    newNextDate = calendar.date(byAdding: .weekOfYear, value: 1, to: currentDueDate)
+                    // Sử dụng WeekStartSettings để tính tuần theo ngày bắt đầu tuần đã chọn
+                    newNextDate = WeekStartSettings.shared.addWeeks(1, to: currentDueDate)
                 case .monthly:
                     newNextDate = calendar.date(byAdding: .month, value: 1, to: currentDueDate)
                 case .yearly:
@@ -857,7 +885,13 @@ class DataRepository {
         let newTransaction = Transaction(context: context)
         newTransaction.id = UUID()
         newTransaction.title = recurring.title ?? "Giao dịch định kỳ"
-        newTransaction.amount = recurring.amount
+        
+        // Validate amount trước khi gán để tránh NaN/Infinite
+        let safeAmount = recurring.amount.isFinite && !recurring.amount.isNaN && recurring.amount >= 0 
+            ? recurring.amount 
+            : 0
+        newTransaction.amount = safeAmount
+        
         newTransaction.type = recurring.type ?? "expense"
         newTransaction.date = date
         newTransaction.note = recurring.note

@@ -55,6 +55,13 @@
 "settings_appearance_system" = "System";
 "settings_row_currency" = "Main Currency";
 "settings_row_week_start" = "Start Day of Week";
+"week_start_sunday" = "Sunday";
+"week_start_monday" = "Monday";
+"week_start_tuesday" = "Tuesday";
+"week_start_wednesday" = "Wednesday";
+"week_start_thursday" = "Thursday";
+"week_start_friday" = "Friday";
+"week_start_saturday" = "Saturday";
 "settings_section_data" = "Data Management";
 "settings_row_manage_categories" = "Manage Categories";
 "settings_row_export_data" = "Export Data";
@@ -68,7 +75,42 @@
 "settings_row_rate_app" = "Rate App";
 "settings_row_feedback" = "Feedback & Support";
 "settings_row_privacy_policy" = "Privacy Policy";
+"privacy_policy_title" = "Privacy Policy";
+"privacy_policy_last_updated" = "Last Updated: November 2025";
+"privacy_policy_section_intro_title" = "1. Introduction";
+"privacy_policy_section_intro_content" = "Expense+ (\"the App\") is committed to protecting your privacy. This policy describes how we collect, use, store, and protect your information when you use the App.";
+"privacy_policy_section_data_collection_title" = "2. Information We Collect";
+"privacy_policy_section_data_collection_content" = "The App only collects and stores your personal financial data on your device, including:\n• Income and expense transactions (amount, date, category, notes)\n• Expense and income categories\n• Budgets and savings goals\n• Recurring transactions\n\nWe do NOT collect personal information such as your name, email, phone number, or any other identifying data.";
+"privacy_policy_section_data_usage_title" = "3. How We Use Your Information";
+"privacy_policy_section_data_usage_content" = "Your data is used ENTIRELY on your device to:\n• Display spending statistics and charts\n• Manage budgets and warnings\n• Track savings goals\n• Automatically create recurring transactions\n\nWe do NOT share, sell, or transmit your data to any third parties.";
+"privacy_policy_section_data_storage_title" = "4. Data Storage";
+"privacy_policy_section_data_storage_content" = "All your data is stored LOCALLY on your device using Core Data. Your data is encrypted and protected by:\n• PIN code you create\n• Face ID / Touch ID (if enabled)\n• iOS Keychain Services for secure PIN storage\n\nYou can export your data as a CSV file for backup or transfer to another device.";
+"privacy_policy_section_data_security_title" = "5. Data Security";
+"privacy_policy_section_data_security_content" = "We implement the following security measures:\n• Data encryption on device\n• Authentication via PIN and Face ID/Touch ID\n• Automatic app lock when switching to background\n• No internet connection - data is completely offline\n\nNote: If you forget your PIN, you will need to reset all data. We cannot recover your PIN.";
+"privacy_policy_section_your_rights_title" = "6. Your Rights";
+"privacy_policy_section_your_rights_content" = "You have the right to:\n• View, edit, and delete your data at any time\n• Export your data as CSV\n• Delete all data in Settings\n• Enable or disable security features (PIN, Face ID)\n• Deny microphone access (for voice recognition feature)";
+"privacy_policy_section_third_party_title" = "7. Third-Party Services";
+"privacy_policy_section_third_party_content" = "The App uses Apple's system services:\n• Core Data: Local data storage\n• Keychain Services: Secure PIN storage\n• LocalAuthentication: Face ID/Touch ID authentication\n• Speech Recognition: Voice recognition (optional)\n• UserNotifications: Reminder notifications (optional)\n\nWe do NOT use any third-party analytics, advertising, or tracking services.";
+"privacy_policy_section_changes_title" = "8. Changes to This Policy";
+"privacy_policy_section_changes_content" = "We may update this policy from time to time. Any changes will be notified in the App and the update date will be displayed at the top of this page. Your continued use of the App after changes constitutes acceptance of the new policy.";
+"privacy_policy_section_contact_title" = "9. Contact Us";
+"privacy_policy_section_contact_content" = "If you have questions or concerns about this privacy policy, please contact us at:\n• Email: support@example.com\n• Or use the \"Feedback & Support\" feature in Settings";
+"privacy_policy_footer" = "By using Expense+, you agree to this privacy policy.";
+
+// MARK: - Tutorial
+"tutorial_step_1" = "Welcome to Expense+! 👋\n\nI'll guide you through the app. Tap \"Next\" to get started!";
+"tutorial_step_2" = "This is the search bar 🔍\n\nYou can search transactions by title, note, or category. Try searching for a transaction!";
+"tutorial_step_3" = "You can filter transactions by Income, Expense, or view All 📊\n\nTry switching between filters to see the difference!";
+"tutorial_step_4" = "This is the Add Transaction screen ➕\n\nYou can enter expense or income information here. Try adding a new transaction!";
+"tutorial_step_5" = "Select the appropriate category for your transaction 📁\n\nYou can also create a new category by tapping the \"Edit\" button at the end of the list.";
+"tutorial_step_6" = "The Dashboard shows detailed statistics about your spending and income 📈\n\nYou can view by month or year, and see category analysis charts.";
+"tutorial_step_7" = "In Settings, you can customize language, appearance, currency, and many other options ⚙️\n\nExplore features like budgets, savings goals, and recurring transactions!";
+"tutorial_step_8" = "The navigation bar at the bottom helps you switch between screens 🎯\n\nYou've got the hang of it! Happy expense tracking! 🎉";
+"tutorial_next" = "Next";
+"tutorial_skip" = "Skip";
 "settings_row_version" = "Version";
+"settings_section_tutorial" = "Tutorial";
+"settings_row_show_tutorial" = "Show Tutorial Again";
 "settings_section_danger" = "Danger Zone";
 "settings_row_reset_data" = "Reset All Data";
 "language_selection_title" = "Select Language";
@@ -109,6 +151,9 @@
 "filter_income" = "Income";
 "filter_expense" = "Expense";
 "home_no_transactions" = "No transactions yet";
+"home_search_placeholder" = "Search transactions...";
+"home_search_no_results" = "No results found";
+"home_search_no_results_hint" = "Try searching with different keywords";
 
 // MARK: - Dashboard Screen
 "dashboard_period_monthly" = "Monthly";

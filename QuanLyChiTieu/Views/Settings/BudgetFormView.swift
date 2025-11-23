@@ -29,7 +29,9 @@ struct BudgetFormView: View {
         
         if let budget = budget {
             _selectedCategoryID = State(initialValue: budget.categoryID)
-            _amount = State(initialValue: String(format: "%.0f", budget.amount))
+            // Validate amount trước khi format
+            let safeAmount = budget.amount.isFinite && !budget.amount.isNaN ? budget.amount : 0
+            _amount = State(initialValue: String(format: "%.0f", safeAmount))
             _selectedPeriod = State(initialValue: budget.budgetPeriod)
             _rolloverEnabled = State(initialValue: budget.rolloverEnabled)
         }

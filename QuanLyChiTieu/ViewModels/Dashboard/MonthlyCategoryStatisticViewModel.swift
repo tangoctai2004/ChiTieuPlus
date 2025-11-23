@@ -152,7 +152,9 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
         for transaction in self.allTransactionsForYear {
             guard let date = transaction.date else { continue }
             let month = Calendar.current.component(.month, from: date)
-            newChartData[month - 1].totalAmount += (transaction.amount.isNaN ? 0 : transaction.amount)
+            let amount = transaction.amount
+            let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+            newChartData[month - 1].totalAmount += safeAmount
         }
         
         self.monthlyChartData = newChartData
@@ -180,7 +182,11 @@ class MonthlyCategoryStatisticViewModel: ObservableObject {
     }
     
     var displayedTransactionsTotal: Double {
-        displayedTransactions.reduce(0) { $0 + ($1.amount.isNaN ? 0 : $1.amount) }
+        displayedTransactions.reduce(0) { sum, transaction in
+            let amount = transaction.amount
+            let safeAmount = amount.isFinite && !amount.isNaN && amount >= 0 ? amount : 0
+            return sum + safeAmount
+        }
     }
 
     // MARK: - View Helpers

@@ -84,7 +84,7 @@ struct BudgetCardView: View {
                         
                         Spacer()
                         
-                        Text("\(Int(budget.usagePercentage * 100))%")
+                        Text("\(Int((budget.usagePercentage.isFinite && !budget.usagePercentage.isNaN ? budget.usagePercentage : 0) * 100))%")
                             .font(.system(.subheadline, design: .rounded).bold())
                             .foregroundColor(warningColor)
                     }
