@@ -1,0 +1,27 @@
+PROJECT: Chi Tiêu+ (Personal Finance Management)
+
+1. MÔ TẢ TỔNG QUAN
+Ứng dụng quản lý tài chính cá nhân trên iOS, giúp người dùng theo dõi thu chi, lập ngân sách và tiết kiệm hiệu quả.
+
+2. CÔNG NGHỆ SỬ DỤNG (TECH STACK)
+- Ngôn ngữ: Swift 5.9
+- Framework UI: SwiftUI
+- Cơ sở dữ liệu: Core Data
+- Kiến trúc: MVVM (Model-View-ViewModel)
+- Hệ điều hành mục tiêu: iOS 16.0+
+- IDE: Xcode 15.0+
+
+3. KIẾN TRÚC HỆ THỐNG (MVVM)
+- Model: Các thực thể Core Data (Transaction, Category, Budget...) và DataRepository.
+- View: Giao diện SwiftUI (Dashboard, TransactionForm, BudgetView...).
+- ViewModel: Quản lý logic nghiệp vụ, trạng thái UI (@Published) và giao tiếp với Model.
+- Helpers/Services: Các tiện ích hỗ trợ (NavigationCoordinator, AppUtils, LocalAuthManager).
+
+4. CÁC CHỨC NĂNG CHÍNH
+- Quản lý Giao dịch (Thu/Chi): Thêm, sửa, xóa, xem chi tiết.
+- Quản lý Danh mục: Phân loại thu chi, tùy chỉnh icon/màu sắc.
+- Quản lý Ngân sách: Thiết lập hạn mức chi tiêu, cảnh báo vượt mức.
+- Mục tiêu Tiết kiệm: Theo dõi tiến độ tích lũy tài chính.
+- Giao dịch Định kỳ: Tự động tạo giao dịch lặp lại.
+- Báo cáo & Thống kê: Biểu đồ trực quan về tình hình tài chính.
+- Bảo mật & Tiện ích: FaceID/TouchID, Xuất CSV, Dark Mode.

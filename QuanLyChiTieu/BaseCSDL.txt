@@ -1,23 +1,58 @@
-Cơ sở dữ liệu:
+CƠ SỞ DỮ LIỆU (CORE DATA SCHEMA)
 
-Entity - CATEGORY
-id - UUID           Mã định danh danh mục. Duy nhất cho mỗi danh mục dùng để truy xuất, so sánh, đồng bộ, không bị trùng lặp.
-name - String       Tên danh mục. Ví dụ: Ăn uống, Du lịch, Thể thao, Giải trí, Hoá đơn, Học phí...
-type - String       Loại danh mục. Ví dụ: inCome, expense: thu nhập hoặc chi tiêu.
-createAt - Date     Ngày danh mục được tạo ra.
-updateAt - Date     Ngày danh mục được sửa đổi, cập nhật.
+1. Entity: CATEGORY (Danh mục)
+- id: UUID (Khóa chính)
+- name: String (Tên danh mục)
+- type: String (Loại: "income" hoặc "expense")
+- icon: String (Tên SF Symbol)
+- color: String (Mã màu Hex)
+- createAt: Date (Ngày tạo)
+- updateAt: Date (Ngày cập nhật)
+* Quan hệ: 1-N với Transaction (Một danh mục có nhiều giao dịch).
 
-Entity - TRANSACTION
-id - UUID           Mã đinh danh duy nhất cho giao dịch
-title - String      Tiêu đề giao dịch. Ví dụ: Ăn sáng bánh mì, Lương tháng 5, Thưởng tháng 5, Tiền học kì 1 năm 4,...
-amount - Double     Số tiền giao dịch
-date - Date         Ngày thực hiện giao dịch
-type - String       Loại giao dịch. Ví dụ: inCome, expense: thu nhập hoặc chi tiêu.
-note - String       Ghi chú cho giao dịch
-createAt - Date     Ngày tạo giao dịch
-updateAt - Date     Ngày giao dịch được sửa đổi, cập nhật.
+2. Entity: TRANSACTION (Giao dịch)
+- id: UUID (Khóa chính)
+- title: String (Tiêu đề/Mô tả ngắn)
+- amount: Double (Số tiền)
+- date: Date (Ngày giao dịch)
+- type: String (Loại: "income" hoặc "expense")
+- note: String (Ghi chú chi tiết)
+- categoryID: UUID (Khóa ngoại - Tham chiếu đến Category)
+- createAt: Date (Ngày tạo)
+- updateAt: Date (Ngày cập nhật)
+* Quan hệ: N-1 với Category (Mỗi giao dịch thuộc về 1 danh mục).
 
-Mối quan hệ CATEGORY - TRANSACTION: 1 - nhiều: Một danh mục có thể liên kết với nhiều giao dịch, mỗi giao dịch chỉ một danh mục cụ thể.
-Mối quan hệ TRANSACTION - CATEGORY: 1 - 1: Một giao dịch chỉ có thể liên kết với một danh mục duy nhất.
+3. Entity: BUDGET (Ngân sách)
+- id: UUID (Khóa chính)
+- amount: Double (Số tiền hạn mức)
+- period: String (Kỳ hạn: "monthly", "weekly", "yearly")
+- startDate: Date (Ngày bắt đầu áp dụng)
+- warningThresholds: String (Các mốc cảnh báo, VD: "80,90")
+- rolloverEnabled: Bool (Cho phép chuyển số dư sang kỳ sau)
+- isActive: Bool (Trạng thái hoạt động)
+- categoryID: UUID (Khóa ngoại - Tham chiếu đến Category)
+* Logic: Thiết lập giới hạn chi tiêu cho một danh mục cụ thể.
 
+4. Entity: SAVINGS_GOAL (Mục tiêu tiết kiệm)
+- id: UUID (Khóa chính)
+- title: String (Tên mục tiêu)
+- targetAmount: Double (Số tiền mục tiêu)
+- currentAmount: Double (Số tiền hiện có)
+- startDate: Date (Ngày bắt đầu)
+- targetDate: Date (Ngày dự kiến hoàn thành)
+- isCompleted: Bool (Trạng thái hoàn thành)
+- iconName: String (Icon đại diện)
+- color: String (Màu sắc)
+* Logic: Hoạt động độc lập, người dùng nạp tiền vào mục tiêu.
 
+5. Entity: RECURRING_TRANSACTION (Giao dịch định kỳ)
+- id: UUID (Khóa chính)
+- title: String (Tên giao dịch)
+- amount: Double (Số tiền)
+- frequency: String (Tần suất: "daily", "weekly", "monthly", "yearly")
+- startDate: Date (Ngày bắt đầu)
+- endDate: Date? (Ngày kết thúc - Tùy chọn)
+- nextDueDate: Date (Ngày đến hạn tiếp theo)
+- isActive: Bool (Trạng thái hoạt động)
+- categoryID: UUID (Khóa ngoại - Tham chiếu đến Category)
+* Logic: Hệ thống tự động tạo Transaction mới khi đến nextDueDate.
