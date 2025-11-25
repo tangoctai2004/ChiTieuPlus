@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Thực Tập - Chi Tiêu+</title>
+    <style>
+        :root {
+            /* App Colors - Light Mode */
+            --bg-color: #F5F5F7;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-primary: #1D1D1F;
+            --text-secondary: #515154;
+
+            /* Accents */
+            --primary-green: #34C759;
+            /* Income/Success */
+            --primary-red: #FF3B30;
+            /* Expense/Destructive */
+            --primary-blue: #007AFF;
+            --accent-purple: #AF52DE;
+
+            /* Gradients */
+            --brand-gradient: linear-gradient(135deg, #FF3B30 0%, #AF52DE 100%);
+
+            /* Layout */
+            --slide-width: 100vw;
+            --slide-height: 100vh;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        .slider-container {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            width: max-content;
+            /* Auto-adjust width based on content */
+            height: 100vh;
+        }
+
+        .slide {
+            width: var(--slide-width);
+            height: var(--slide-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            background: radial-gradient(circle at center, #ffffff 0%, #f2f2f7 100%);
+            flex-shrink: 0;
+            /* Prevent slides from shrinking */
+        }
+
+        /* Slide Header */
+        .slide-header {
+            position: absolute;
+            top: 40px;
+            left: 60px;
+            right: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid #d1d1d6;
+            padding-bottom: 10px;
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Content Layouts */
+        .content-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            height: 70%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1.2rem;
+            color: var(--primary-green);
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        p,
+        li {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+
+        /* Title Slide Specifics */
+        .title-slide-content {
+            text-align: center;
+            z-index: 2;
+        }
+
+        .main-title {
+            font-size: 6rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .sub-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .author-info {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.5rem 3rem;
+            border-radius: 50px;
+            display: inline-block;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Tech Stack Grid */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .tech-item {
+            background: #FFFFFF;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+            background: #FFFFFF;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .tech-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* MVVM Diagram */
+        .mvvm-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .mvvm-node {
+            background: #FFFFFF;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 28%;
+            text-align: center;
+            border: 2px solid transparent;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .mvvm-node.view {
+            border-color: var(--primary-blue);
+        }
+
+        .mvvm-node.viewmodel {
+            border-color: var(--accent-purple);
+        }
+
+        .mvvm-node.model {
+            border-color: var(--primary-green);
+        }
+
+        .mvvm-arrow {
+            flex-grow: 1;
+            height: 2px;
+            background: #d1d1d6;
+            position: relative;
+            margin: 0 10px;
+        }
+
+        .mvvm-arrow::after,
+        .mvvm-arrow::before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid #d1d1d6;
+            border-right: 2px solid #d1d1d6;
+            transform: rotate(45deg);
+            right: 0;
+            top: -5px;
+        }
+
+        .mvvm-arrow::before {
+            transform: rotate(225deg);
+            left: 0;
+            right: auto;
+        }
+
+        /* Database Schema */
+        .db-schema {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .entity-box {
+            background: #FFFFFF;
+            border: 1px solid #e5e5ea;
+            border-radius: 8px;
+            width: 220px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .entity-header {
+            background: #f2f2f7;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        .entity-body {
+            padding: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .entity-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        /* Mockup UI */
+        .mockup-phone {
+            width: 300px;
+            height: 600px;
+            background: #fff;
+            border: 10px solid #e5e5ea;
+            border-radius: 40px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .mockup-header {
+            height: 40px;
+            background: #f2f2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+
+        .mockup-content {
+            flex: 1;
+            padding: 15px;
+            background: #fff;
+        }
+
+        .mockup-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f2f2f7;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .amount-income {
+            color: var(--primary-green);
+        }
+
+        .amount-expense {
+            color: var(--primary-red);
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            color: var(--text-primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--brand-gradient);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* Image Utilities */
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .tech-logo {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin: 0 auto 1rem auto;
+            display: block;
+        }
+
+        .screenshot-frame {
+            border: 8px solid #333;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            line-height: 0;
+            background: #000;
+        }
+
+        .logo-placeholder {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem auto;
+            border: 2px dashed #555;
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slider-container" id="slider">
+
+        <!-- Slide 1: Title -->
+        <div class="slide">
+            <div class="title-slide-content">
+                <!-- Logo Placeholder -->
+                <div class="logo-placeholder">
+                    <img src="assets/logo.png" alt="Logo" class="img-fluid"
+                        onerror="this.style.display='none'; this.parentElement.innerText='Logo App'">
+                </div>
+                <h1 class="main-title">CHI TIÊU+</h1>
+                <h2 class="sub-title">BÁO CÁO THỰC TẬP CƠ SỞ</h2>
+                <div class="author-info">
+                    <p style="margin-bottom: 0.5rem;">Sinh viên: <strong>Tạ Ngọc Tài</strong></p>
+                    <p style="margin: 0;">GVHD: <strong>NGUYỄN VĂN TIẾN</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Giới thiệu -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Tổng Quan Đề Tài</div>
+                <div class="slide-subtitle">01 / Giới thiệu</div>
+            </div>
+            <div class="content-wrapper grid-2">
+                <div class="card">
+                    <img src="assets/problem.png" alt="Vấn đề" class="img-fluid"
+                        style="border-radius: 12px; margin-bottom: 1rem; max-height: 200px; object-fit: cover;"
+                        onerror="this.style.display='none'">
+                    <h3>Vấn đề thực tế</h3>
+                    <p>Trong bối cảnh kinh tế số, việc quản lý tài chính cá nhân trở nên phức tạp hơn bao giờ hết. Các
+                        phương pháp truyền thống đang bộc lộ nhiều hạn chế:</p>
+                    <ul>
+                        <li><strong>Thiếu kiểm soát:</strong> Không nắm bắt được dòng tiền ra vào hàng ngày, dẫn đến
+                            tình trạng "cháy túi" cuối tháng.</li>
+                        <li><strong>Ghi chép thủ công:</strong> Sử dụng sổ tay hoặc Excel tốn thời gian, dễ sai sót và
+                            khó tra cứu lịch sử.</li>
+                        <li><strong>Tâm lý chi tiêu:</strong> Dễ bị cám dỗ bởi các khoản chi không cần thiết khi không
+                            có kế hoạch ngân sách rõ ràng.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <img src="assets/solution.png" alt="Giải pháp" class="img-fluid"
+                        style="border-radius: 12px; margin-bottom: 1rem; max-height: 200px; object-fit: cover;"
+                        onerror="this.style.display='none'">
+                    <h3>Giải pháp: Chi Tiêu+</h3>
+                    <p><strong>Chi Tiêu+</strong> không chỉ là một công cụ ghi chép, mà là một trợ lý tài chính thông
+                        minh trên nền tảng iOS:</p>
+                    <ul>
+                        <li><strong>All-in-One:</strong> Tích hợp ghi chép, lập ngân sách và báo cáo thống kê trong một
+                            ứng dụng duy nhất.</li>
+                        <li><strong>Trải nghiệm người dùng (UX):</strong> Tối ưu hóa thao tác nhập liệu, giúp người dùng
+                            ghi lại giao dịch chỉ trong < 3 giây.</li>
+                        <li><strong>Kiểm soát chủ động:</strong> Hệ thống cảnh báo ngân sách thời gian thực giúp người
+                            dùng điều chỉnh hành vi chi tiêu kịp thời.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Công nghệ -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Công Nghệ Sử Dụng</div>
+                <div class="slide-subtitle">02 / Tech Stack</div>
+            </div>
+            <div class="content-wrapper">
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <img src="assets/swift_logo.png" alt="Swift" class="tech-logo"
+                            onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span class=\'tech-icon\'>Swift</span>')">
+                        <strong>Swift 5.9</strong>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Ngôn ngữ lập trình hiện đại, an toàn
+                            (Type-safe) và hiệu năng cao. Sử dụng các tính năng mới như <em>Concurrency
+                                (async/await)</em> để xử lý tác vụ nền mượt mà.</p>
+                    </div>
+                    <div class="tech-item">
+                        <img src="assets/swiftui_logo.png" alt="SwiftUI" class="tech-logo"
+                            onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span class=\'tech-icon\'>UI</span>')">
+                        <strong>SwiftUI</strong>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Framework UI khai báo (Declarative). Sử dụng
+                            <code>@StateObject</code>, <code>@Environment</code> để quản lý luồng dữ liệu và cập nhật
+                            giao diện tự động.
+                        </p>
+                    </div>
+                    <div class="tech-item">
+                        <img src="assets/coredata_logo.png" alt="Core Data" class="tech-logo"
+                            onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span class=\'tech-icon\'>DB</span>')">
+                        <strong>Core Data</strong>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Framework lưu trữ đối tượng (Object Graph).
+                            Quản lý dữ liệu bền vững với <code>NSPersistentContainer</code> và tối ưu hóa truy vấn với
+                            <code>NSFetchRequest</code>.
+                        </p>
+                    </div>
+                    <div class="tech-item">
+                        <img src="assets/mvvm_icon.png" alt="MVVM" class="tech-logo"
+                            onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span class=\'tech-icon\'>MVVM</span>')">
+                        <strong>Architecture</strong>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Mô hình kiến trúc phân lớp. Tách biệt hoàn
+                            toàn Business Logic (ViewModel) khỏi UI (View), giúp code dễ đọc, dễ test và bảo trì.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Kiến trúc -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Kiến Trúc Hệ Thống</div>
+                <div class="slide-subtitle">03 / MVVM Pattern</div>
+            </div>
+            <div class="content-wrapper grid-2" style="align-items: center; grid-template-columns: 1.2fr 1fr;">
+                <!-- Left Column: Diagram -->
+                <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <div class="mvvm-diagram" id="mvvm-css-diagram" style="transform: scale(1.1); margin-bottom: 20px;">
+                        <div class="mvvm-node view">
+                            <h3>VIEW</h3>
+                            <p>SwiftUI</p>
+                        </div>
+                        <div class="mvvm-arrow"></div>
+                        <div class="mvvm-node viewmodel">
+                            <h3>VIEW MODEL</h3>
+                            <p>Logic</p>
+                        </div>
+                        <div class="mvvm-arrow"></div>
+                        <div class="mvvm-node model">
+                            <h3>MODEL</h3>
+                            <p>Core Data</p>
+                        </div>
+                    </div>
+                    <!-- Image Fallback -->
+                    <div style="text-align: center; width: 100%;">
+                        <img src="assets/mvvm_diagram.png" alt="MVVM Architecture" class="img-fluid"
+                            style="width: 100%; max-height: 600px; border-radius: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); display: none; object-fit: contain;"
+                            onload="this.style.display='block'; document.getElementById('mvvm-css-diagram').style.display='none'">
+                    </div>
+                </div>
+
+                <!-- Right Column: Data Flow Steps -->
+                <div style="display: flex; flex-direction: column; gap: 20px; justify-content: center; height: 100%;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.8rem;">Luồng dữ liệu (Data Flow)</h3>
+
+                    <div class="card"
+                        style="padding: 1.8rem; flex-direction: row; align-items: flex-start; gap: 20px; min-height: auto;">
+                        <div
+                            style="background: var(--primary-blue); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 1.2rem; margin-top: 5px;">
+                            1</div>
+                        <div>
+                            <strong style="color: white; display: block; margin-bottom: 8px; font-size: 1.2rem;">User
+                                Action & Intent</strong>
+                            <span style="font-size: 1rem; color: #ddd; line-height: 1.6;">Người dùng thực hiện thao tác
+                                trên giao diện (View) như nhấn nút "Thêm", nhập số tiền, hoặc vuốt để xóa. View sẽ gửi
+                                một "Intent" (ý định) yêu cầu xử lý đến ViewModel.</span>
+                        </div>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.8rem; flex-direction: row; align-items: flex-start; gap: 20px; min-height: auto;">
+                        <div
+                            style="background: var(--accent-purple); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 1.2rem; margin-top: 5px;">
+                            2</div>
+                        <div>
+                            <strong
+                                style="color: white; display: block; margin-bottom: 8px; font-size: 1.2rem;">Processing
+                                & Logic</strong>
+                            <span style="font-size: 1rem; color: #ddd; line-height: 1.6;">ViewModel tiếp nhận yêu cầu,
+                                thực hiện kiểm tra dữ liệu (Validation), tính toán logic nghiệp vụ, sau đó gọi xuống
+                                Model (Core Data) để lưu trữ hoặc truy vấn dữ liệu bền vững.</span>
+                        </div>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.8rem; flex-direction: row; align-items: flex-start; gap: 20px; min-height: auto;">
+                        <div
+                            style="background: var(--primary-green); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 1.2rem; margin-top: 5px;">
+                            3</div>
+                        <div>
+                            <strong style="color: white; display: block; margin-bottom: 8px; font-size: 1.2rem;">State
+                                Update & UI Refresh</strong>
+                            <span style="font-size: 1rem; color: #ddd; line-height: 1.6;">Sau khi xử lý xong, ViewModel
+                                cập nhật các biến trạng thái <code>@Published</code>. Nhờ cơ chế Binding của SwiftUI,
+                                View tự động lắng nghe và vẽ lại giao diện mới nhất cho người dùng.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Database -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Cơ Sở Dữ Liệu</div>
+                <div class="slide-subtitle">04 / Schema Design</div>
+            </div>
+            <div class="content-wrapper grid-2" style="align-items: center; grid-template-columns: 1fr 1.2fr;">
+
+                <!-- Left Column: Detailed Explanations -->
+                <div style="display: flex; flex-direction: column; gap: 20px; justify-content: center; height: 100%;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.8rem;">Thiết kế thực thể (Entities)</h3>
+
+                    <div class="card" style="padding: 1.5rem; min-height: auto;">
+                        <h4 style="color: var(--primary-green); margin-bottom: 8px; font-size: 1.2rem;">Category (Danh
+                            mục)</h4>
+                        <p style="font-size: 1rem; color: #ddd; line-height: 1.6; margin: 0;">Quản lý nhóm chi tiêu/thu
+                            nhập. Mỗi danh mục có màu sắc và icon riêng biệt để dễ nhận diện trên biểu đồ. Thuộc tính
+                            <code>type</code> phân biệt khoản thu hay chi.
+                        </p>
+                    </div>
+
+                    <div class="card" style="padding: 1.5rem; min-height: auto;">
+                        <h4 style="color: var(--primary-blue); margin-bottom: 8px; font-size: 1.2rem;">Transaction (Giao
+                            dịch)</h4>
+                        <p style="font-size: 1rem; color: #ddd; line-height: 1.6; margin: 0;">Lưu trữ chi tiết từng
+                            khoản thu chi (số tiền, ngày tháng, ghi chú). Đây là bảng dữ liệu chính, phát sinh nhiều bản
+                            ghi nhất trong hệ thống.</p>
+                    </div>
+
+                    <div class="card" style="padding: 1.5rem; min-height: auto;">
+                        <h4 style="color: var(--primary-red); margin-bottom: 8px; font-size: 1.2rem;">Budget & Savings
+                        </h4>
+                        <p style="font-size: 1rem; color: #ddd; line-height: 1.6; margin: 0;"><strong>Budget:</strong>
+                            Giới hạn chi tiêu theo chu kỳ. <br><strong>SavingsGoal:</strong> Mục tiêu tiết kiệm với hạn
+                            mức và thời hạn cụ thể.</p>
+                    </div>
+
+                    <div
+                        style="padding: 1rem; border-left: 4px solid var(--accent-purple); background: rgba(255,255,255,0.05);">
+                        <p style="margin: 0; font-size: 1rem; color: #ccc;">🔗 <strong>Quan hệ One-to-Many:</strong> Một
+                            <em>Category</em> chứa nhiều <em>Transaction</em>. Khi xóa Category, người dùng có tùy chọn
+                            giữ lại hoặc xóa các giao dịch liên quan.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Column: Schema Diagram -->
+                <div style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <div class="db-schema" id="db-css-schema" style="transform: scale(1.1); margin-bottom: 20px;">
+                        <div class="entity-box">
+                            <div class="entity-header" style="color: var(--primary-green);">Category</div>
+                            <div class="entity-body">
+                                <div class="entity-row"><span>id</span> <span>UUID</span></div>
+                                <div class="entity-row"><span>name</span> <span>String</span></div>
+                                <div class="entity-row"><span>type</span> <span>String</span></div>
+                                <div class="entity-row"><span>icon</span> <span>String</span></div>
+                                <div class="entity-row"><span>color</span> <span>String</span></div>
+                            </div>
+                        </div>
+                        <div class="entity-box">
+                            <div class="entity-header" style="color: var(--primary-blue);">Transaction</div>
+                            <div class="entity-body">
+                                <div class="entity-row"><span>id</span> <span>UUID</span></div>
+                                <div class="entity-row"><span>amount</span> <span>Double</span></div>
+                                <div class="entity-row"><span>date</span> <span>Date</span></div>
+                                <div class="entity-row"><span>note</span> <span>String</span></div>
+                                <div class="entity-row"><span>category</span> <span>Rel -> Cat</span></div>
+                            </div>
+                        </div>
+                        <div class="entity-box">
+                            <div class="entity-header" style="color: var(--primary-red);">Budget</div>
+                            <div class="entity-body">
+                                <div class="entity-row"><span>id</span> <span>UUID</span></div>
+                                <div class="entity-row"><span>limit</span> <span>Double</span></div>
+                                <div class="entity-row"><span>period</span> <span>String</span></div>
+                                <div class="entity-row"><span>startDate</span> <span>Date</span></div>
+                                <div class="entity-row"><span>category</span> <span>Rel -> Cat</span></div>
+                            </div>
+                        </div>
+                        <div class="entity-box">
+                            <div class="entity-header" style="color: var(--accent-purple);">SavingsGoal</div>
+                            <div class="entity-body">
+                                <div class="entity-row"><span>id</span> <span>UUID</span></div>
+                                <div class="entity-row"><span>target</span> <span>Double</span></div>
+                                <div class="entity-row"><span>current</span> <span>Double</span></div>
+                                <div class="entity-row"><span>deadline</span> <span>Date</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Image Fallback for DB Schema -->
+                    <div style="text-align: center; width: 100%;">
+                        <img src="assets/database_erd.png" alt="Database Schema" class="img-fluid"
+                            style="width: 100%; max-height: 600px; border-radius: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); display: none; object-fit: contain;"
+                            onload="this.style.display='block'; document.getElementById('db-css-schema').style.display='none'">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Chức năng 1 -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Quản Lý Thu Chi</div>
+                <div class="slide-subtitle">05 / Chức năng chính</div>
+            </div>
+            <div class="content-wrapper grid-2" style="align-items: center; grid-template-columns: 1.8fr 1fr;">
+                <!-- Left Column: 3 Screenshots -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                    <!-- Screen 1: Launch -->
+                    <div class="screenshot-frame"
+                        style="max-width: 220px; border-width: 8px; border-radius: 24px; transform: translateY(20px);">
+                        <img src="assets/launch_screen.png" alt="Màn hình Chờ" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 400px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:400px;\'><div class=\'mockup-content\' style=\'display:flex;align-items:center;justify-content:center;height:100%;\'><h3 style=\'color:white;\'>Splash</h3></div></div>'">
+                    </div>
+                    <!-- Screen 2: Home -->
+                    <div class="screenshot-frame"
+                        style="max-width: 240px; border-width: 10px; border-radius: 28px; z-index: 2; box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
+                        <img src="assets/home_screen.png" alt="Màn hình Chính" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 450px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:450px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Home</h3></div></div>'">
+                    </div>
+                    <!-- Screen 3: Add Transaction -->
+                    <div class="screenshot-frame"
+                        style="max-width: 220px; border-width: 8px; border-radius: 24px; transform: translateY(20px);">
+                        <img src="assets/add_transaction_screen.png" alt="Thêm Giao dịch" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 400px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:400px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Add</h3></div></div>'">
+                    </div>
+                </div>
+
+                <!-- Right Column: Features -->
+                <div style="display: flex; flex-direction: column; gap: 20px; justify-content: center; height: 100%;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.8rem;">Luồng người dùng (User Flow)</h3>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-green);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">1. Khởi động (Splash)</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Màn hình chào mừng với
+                            logo thương hiệu, tải dữ liệu nền nhanh chóng.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-blue);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">2. Trang chủ (Home)</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Tổng quan số dư, danh
+                            sách giao dịch gần nhất và biểu đồ thu chi trong tháng.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--accent-purple);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">3. Thêm giao dịch (Add)</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Form nhập liệu tối
+                            giản: Chọn danh mục -> Nhập số tiền -> Lưu. Hoàn tất trong 3s.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Quản Lý Danh Mục & Dữ Liệu -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Quản Lý Danh Mục & Dữ Liệu</div>
+                <div class="slide-subtitle">06 / Chức năng chính</div>
+            </div>
+            <div class="content-wrapper grid-2" style="align-items: center; grid-template-columns: 1fr 1.8fr;">
+
+                <!-- Left Column: Features -->
+                <div style="display: flex; flex-direction: column; gap: 20px; justify-content: center; height: 100%;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.8rem;">Cá nhân hóa trải nghiệm</h3>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-blue);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">1. Danh sách danh mục</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Hiển thị trực quan với
+                            icon và màu sắc. Phân chia rõ ràng giữa nhóm Thu và Chi.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-green);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">2. Thêm & Sửa danh mục</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Tự do tạo danh mục mới,
+                            chọn icon từ thư viện phong phú và gán màu sắc yêu thích.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-red);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">3. Chỉnh sửa giao dịch</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Dễ dàng cập nhật thông
+                            tin sai sót hoặc xóa giao dịch không cần thiết.</p>
+                    </div>
+                </div>
+
+                <!-- Right Column: 3 Screenshots -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                    <!-- Screen 1: Category List -->
+                    <div class="screenshot-frame"
+                        style="max-width: 220px; border-width: 8px; border-radius: 24px; transform: translateY(20px);">
+                        <img src="assets/category_list_screen.png" alt="Danh sách danh mục" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 400px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:400px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>List</h3></div></div>'">
+                    </div>
+                    <!-- Screen 2: Add/Edit Category -->
+                    <div class="screenshot-frame"
+                        style="max-width: 240px; border-width: 10px; border-radius: 28px; z-index: 2; box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
+                        <img src="assets/add_category_screen.png" alt="Thêm/Sửa danh mục" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 450px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:450px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Edit Cat</h3></div></div>'">
+                    </div>
+                    <!-- Screen 3: Edit Transaction -->
+                    <div class="screenshot-frame"
+                        style="max-width: 220px; border-width: 8px; border-radius: 24px; transform: translateY(20px);">
+                        <img src="assets/edit_transaction_screen.png" alt="Sửa giao dịch" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 400px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:400px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Edit Trans</h3></div></div>'">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Chức năng 2 -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Báo Cáo & Ngân Sách</div>
+                <div class="slide-subtitle">07 / Chức năng chính</div>
+            </div>
+            <div class="content-wrapper grid-2" style="align-items: center; grid-template-columns: 1fr 1.5fr;">
+
+                <!-- Left Column: Features -->
+                <div style="display: flex; flex-direction: column; gap: 20px; justify-content: center; height: 100%;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.8rem;">Phân tích tài chính</h3>
+
+                    <div class="card"
+                        style="padding: 1.5rem; min-height: auto; border-left: 4px solid var(--primary-red);">
+                        <h4 style="color: white; margin-bottom: 8px; font-size: 1.2rem;">📊 Biểu đồ trực quan</h4>
+                        <p style="font-size: 1rem; color: #ddd; line-height: 1.6; margin: 0;"><strong>Donut
+                                Chart:</strong> Theo dõi tỷ lệ thu chi.<br><strong>Bar Chart:</strong> Phân tích xu
+                            hướng theo thời gian.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.5rem; min-height: auto; border-left: 4px solid var(--primary-blue);">
+                        <h4 style="color: white; margin-bottom: 8px; font-size: 1.2rem;">⚠️ Cảnh báo ngân sách</h4>
+                        <p style="font-size: 1rem; color: #ddd; line-height: 1.6; margin: 0;">Thiết lập hạn mức chi tiêu
+                            cho từng danh mục. Hệ thống tự động cảnh báo khi sắp vượt ngưỡng.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.5rem; min-height: auto; border-left: 4px solid var(--primary-green);">
+                        <h4 style="color: white; margin-bottom: 8px; font-size: 1.2rem;">💰 Chi tiết hàng tháng</h4>
+                        <p style="font-size: 1rem; color: #ddd; line-height: 1.6; margin: 0;">Xem danh sách giao dịch
+                            chi tiết theo từng tháng, lọc theo danh mục để kiểm soát dòng tiền.</p>
+                    </div>
+                </div>
+
+                <!-- Right Column: 2 Screenshots -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+                    <!-- Screen 1: Overview (Pie/Donut) -->
+                    <div class="screenshot-frame"
+                        style="max-width: 240px; border-width: 10px; border-radius: 28px; z-index: 2; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+                        <img src="assets/dashboard_overview.png" alt="Biểu đồ tổng quan" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 450px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:450px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Overview</h3></div></div>'">
+                    </div>
+                    <!-- Screen 2: Details (Bar Chart) -->
+                    <div class="screenshot-frame"
+                        style="max-width: 240px; border-width: 10px; border-radius: 28px; transform: translateY(30px); opacity: 0.9;">
+                        <img src="assets/dashboard_details.png" alt="Biểu đồ chi tiết" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 450px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:450px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Details</h3></div></div>'">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Cài Đặt & Tiện Ích -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Cài Đặt & Tiện Ích</div>
+                <div class="slide-subtitle">08 / Tùy chỉnh ứng dụng</div>
+            </div>
+            <div class="content-wrapper grid-2" style="align-items: center; grid-template-columns: 1.8fr 1fr;">
+                <!-- Left Column: 3 Screenshots -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+                    <!-- Screen 1: Settings Menu -->
+                    <div class="screenshot-frame"
+                        style="max-width: 220px; border-width: 8px; border-radius: 24px; transform: translateY(20px);">
+                        <img src="assets/settings_screen.png" alt="Cài đặt chung" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 400px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:400px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Menu</h3></div></div>'">
+                    </div>
+                    <!-- Screen 2: Dark Mode -->
+                    <div class="screenshot-frame"
+                        style="max-width: 240px; border-width: 10px; border-radius: 28px; z-index: 2; box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
+                        <img src="assets/dark_mode_screen.png" alt="Giao diện tối" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 450px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:450px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Dark Mode</h3></div></div>'">
+                    </div>
+                    <!-- Screen 3: Notifications/About -->
+                    <div class="screenshot-frame"
+                        style="max-width: 220px; border-width: 8px; border-radius: 24px; transform: translateY(20px);">
+                        <img src="assets/notifications_screen.png" alt="Thông báo" class="img-fluid"
+                            style="width: 100%; height: auto; min-height: 400px; background: #222; object-fit: cover;"
+                            onerror="this.parentElement.innerHTML='<div class=\'mockup-phone\' style=\'height:400px;\'><div class=\'mockup-content\'><h3 style=\'text-align:center;margin-top:50%;\'>Notif</h3></div></div>'">
+                    </div>
+                </div>
+
+                <!-- Right Column: Features -->
+                <div style="display: flex; flex-direction: column; gap: 20px; justify-content: center; height: 100%;">
+                    <h3 style="margin-bottom: 15px; font-size: 1.8rem;">Trải nghiệm người dùng</h3>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-blue);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">⚙️ Cấu hình hệ thống</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Quản lý dữ liệu,
+                            xuất/nhập file CSV, và thiết lập các tùy chọn cơ bản cho ứng dụng.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--accent-purple);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">🌙 Dark Mode</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Hỗ trợ giao diện tối
+                            hoàn hảo, giúp bảo vệ mắt và tiết kiệm pin trên các thiết bị màn hình OLED.</p>
+                    </div>
+
+                    <div class="card"
+                        style="padding: 1.2rem; min-height: auto; border-left: 4px solid var(--primary-red);">
+                        <h4 style="color: white; margin-bottom: 5px; font-size: 1.1rem;">🔔 Nhắc nhở thông minh</h4>
+                        <p style="font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0;">Đặt lịch nhắc nhở ghi
+                            chép chi tiêu hàng ngày vào khung giờ cố định.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Kết quả -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-title">Kết Quả & Hướng Phát Triển</div>
+                <div class="slide-subtitle">09 / Tổng kết</div>
+            </div>
+            <div class="content-wrapper grid-2">
+                <div class="card">
+                    <h3 style="color: var(--primary-blue);">Kết quả đạt được</h3>
+                    <ul>
+                        <li>Hoàn thiện ứng dụng iOS với đầy đủ tính năng quản lý tài chính cơ bản.</li>
+                        <li>Giao diện hiện đại, hỗ trợ Dark Mode, trải nghiệm người dùng mượt mà.</li>
+                        <li>Áp dụng thành công kiến trúc MVVM và Core Data.</li>
+                        <li>Mã nguồn sạch, dễ bảo trì và mở rộng.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--accent-purple);">Hướng phát triển</h3>
+                    <ul>
+                        <li><strong>Cloud Sync:</strong> Đồng bộ dữ liệu qua iCloud để sử dụng trên nhiều thiết bị.
+                        </li>
+                        <li><strong>AI Insights:</strong> Phân tích thói quen chi tiêu và đưa ra lời khuyên thông
+                            minh.
+                        </li>
+                        <li><strong>Export/Import:</strong> Xuất báo cáo ra PDF/Excel chuyên nghiệp hơn.</li>
+                        <li><strong>Widget:</strong> Xem nhanh số dư ngay trên màn hình chính.</li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Thank You -->
+        <!-- Slide 11: Thank You -->
+        <div class="slide" style="background: radial-gradient(circle at center, #000000 0%, #111 100%);">
+            <div class="content-wrapper"
+                style="align-items: center; text-align: center; height: 100%; justify-content: center;">
+
+                <div style="margin-bottom: 3rem; position: relative;">
+                    <div
+                        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: var(--brand-gradient); filter: blur(100px); opacity: 0.3; border-radius: 50%; z-index: 0;">
+                    </div>
+                    <h1
+                        style="font-size: 8rem; font-weight: 900; line-height: 1; margin: 0; position: relative; z-index: 1; background: linear-gradient(to bottom, #fff, #888); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                        THANK<br>YOU!</h1>
+                </div>
+
+                <div style="z-index: 1; margin-bottom: 4rem;">
+                    <p style="font-size: 1.5rem; color: #888; font-weight: 300; letter-spacing: 1px;">Cảm ơn Thầy Cô và
+                        các bạn đã lắng nghe</p>
+                    <div
+                        style="width: 50px; height: 4px; background: var(--brand-gradient); margin: 20px auto; border-radius: 2px;">
+                    </div>
+                    <p style="font-size: 1.2rem; color: white;"><strong>Q & A Session</strong></p>
+                </div>
+
+                <div style="display: flex; gap: 20px; z-index: 1;">
+                    <button onclick="location.reload()"
+                        style="background: transparent; border: 1px solid #333; color: #666; padding: 12px 30px; border-radius: 30px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px;">
+                        Replay
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="nav-btn" id="prevBtn" onclick="prevSlide()">←</button>
+        <button class="nav-btn" id="nextBtn" onclick="nextSlide()">→</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 11;
+        const slider = document.getElementById('slider');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+
+        function updateState() {
+            // Update buttons
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+
+            // Update progress bar
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function showSlide(index) {
+            if (index < 0 || index >= totalSlides) return;
+            currentSlide = index;
+            const offset = -currentSlide * 100; // 100vw per slide
+            slider.style.transform = `translateX(${offset}vw)`;
+            updateState();
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Initialize
+        updateState();
+    </script>
+
+</body>
+
+</html>
